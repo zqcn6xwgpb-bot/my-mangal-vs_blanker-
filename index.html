@@ -97,14 +97,13 @@
         th:nth-child(6), td:nth-child(6) { width: 15%; } 
 
         td { padding: 8px 5px; vertical-align: middle; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .item-name { font-size: 13px; font-weight: 600; }
+        .item-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; }
         
         input[type="number"] { width: 100%; padding: 10px 2px; text-align: center; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; border: 1px solid transparent; outline: none; transition: 0.2s; }
         .inp-stock { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.2); color: var(--accent); }
         .inp-norm { background: var(--surface2); border-color: var(--border); color: var(--text-dim); }
         .inp-readonly { opacity: 0.3; pointer-events: none; }
         
-        /* Червона індикація якщо треба замовити */
         .need-badge { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 8px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 800; display: block; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2); }
         .done-mark { color: var(--green); opacity: 0.2; font-size: 10px; text-align: center; }
 
@@ -118,8 +117,7 @@
 <body>
 
 <div id="auth-screen">
-    <div style="font-size: 40px; margin-bottom: 10px;">👨‍🍳</div>
-    <div class="auth-title">Мангал та Заготівельний</div>
+    <div style="font-size: 40px; margin-bottom: 10px;">🥩</div> <div class="auth-title">Мангал та Заготівельний</div>
     <input type="password" id="auth-pin" inputmode="numeric" placeholder="••••" onkeydown="if(event.key==='Enter') checkAuth()">
     <button class="ctrl-btn" style="width: 270px; padding: 18px;" onclick="checkAuth()">УВІЙТИ</button>
 </div>
@@ -180,28 +178,28 @@
     let isUnlocked = false;
     let store = { categories: {}, items: {} };
 
-    // Темна/Світла тема
-    function toggleTheme() {
+    // Експортуємо функції в глобальну область видимості
+    window.toggleTheme = () => {
         const isLight = document.body.classList.toggle('light');
         document.getElementById('themeBtn').textContent = isLight ? '☀️' : '🌙';
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
-    }
+    };
 
     if (localStorage.getItem('theme') === 'light') {
         document.body.classList.add('light');
-        document.getElementById('themeBtn').textContent = '☀️';
+        document.addEventListener('DOMContentLoaded', () => document.getElementById('themeBtn').textContent = '☀️');
     }
 
-    function checkAuth() {
+    window.checkAuth = () => {
         if (document.getElementById('auth-pin').value === "2024") {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
         } else {
             alert("Невірний PIN");
         }
-    }
+    };
 
-    function getIsWeekend() { return [0, 5, 6].includes(new Date().getDay()); }
+    window.getIsWeekend = () => [0, 5, 6].includes(new Date().getDay());
 
     window.addEventListener('firebase-ready', () => {
         document.getElementById('date-label').textContent = new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -216,7 +214,7 @@
 
     function render() {
         const container = document.getElementById('checklist-container');
-        const isWe = getIsWeekend();
+        const isWe = window.getIsWeekend();
         const catIds = Object.keys(store.categories).sort((a, b) => store.categories[a].name.localeCompare(store.categories[b].name));
         
         container.innerHTML = catIds.map(catId => {
@@ -228,7 +226,7 @@
                 const order = Math.max(0, norm - total);
 
                 return `<tr>
-                    <td><div class="item-name">${isUnlocked ? `<span onclick="deleteItem('${itemId}')" style="color:red;margin-right:8px;cursor:pointer">✕</span>` : ''}${i.name}</div></td>
+                    <td><div class="item-name">${isUnlocked ? `<span onclick="deleteItem('${itemId}')" style="color:red;margin-right:12px;cursor:pointer;font-weight:800;">✕</span>` : ''}${i.name}</div></td>
                     <td><input type="number" step="0.1" value="${i.s_m || ''}" onchange="upd('${itemId}','s_m',this.value)" class="inp-stock"></td>
                     <td><input type="number" step="0.1" value="${i.s_z || ''}" onchange="upd('${itemId}','s_z',this.value)" class="inp-stock" style="background:rgba(255,255,255,0.03)"></td>
                     <td><input type="number" step="0.1" value="${i.wd || ''}" ${!isUnlocked?'readonly':''} onchange="upd('${itemId}','wd',this.value)" class="${isUnlocked?'inp-norm':'inp-norm inp-readonly'}"></td>
@@ -238,7 +236,7 @@
             }).join('');
 
             return `<div class="category-block">
-                <div class="cat-header"><span class="cat-title">${store.categories[catId].name}</span>${isUnlocked ? `<span onclick="deleteCat('${catId}')" style="color:red;font-size:9px;cursor:pointer">ВИДАЛИТИ РОЗДІЛ</span>` : ''}</div>
+                <div class="cat-header"><span class="cat-title">${store.categories[catId].name}</span>${isUnlocked ? `<span onclick="deleteCat('${catId}')" style="color:red;font-size:9px;cursor:pointer;font-weight:700;">ВИДАЛИТИ РОЗДІЛ</span>` : ''}</div>
                 <div class="table-wrap"><table>
                     <thead><tr><th>ТОВАР</th><th>МАНГАЛ</th><th>ЗАГОТ.</th><th>БД</th><th>ВХ</th><th>ТРЕБА</th></tr></thead>
                     <tbody>${rows}</tbody>
@@ -247,35 +245,58 @@
         }).join('');
     }
 
-    function upd(id, f, v) { window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/${f}`), v); }
-    function addItem() {
+    window.upd = (id, f, v) => window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/${f}`), v);
+    
+    window.addItem = () => {
         const name = document.getElementById('inpName').value;
         const catId = document.getElementById('selCat').value;
         if (name && catId) {
             window.fPush(window.fRef(window.db, `${DB_KEY}/items`), { name, catId, s_m: '', s_z: '', wd: 0, we: 0 });
             document.getElementById('inpName').value = '';
         }
-    }
-    function addCategory() {
+    };
+
+    window.addCategory = () => {
         const name = document.getElementById('inpCat').value.toUpperCase();
         if (name) { window.fPush(window.fRef(window.db, `${DB_KEY}/categories`), { name }); document.getElementById('inpCat').value = ''; }
-    }
+    };
+
     function updateSelect() {
-        document.getElementById('selCat').innerHTML = Object.keys(store.categories).map(id => `<option value="${id}">${store.categories[id].name}</option>`).join('');
+        const sel = document.getElementById('selCat');
+        if (sel) sel.innerHTML = Object.keys(store.categories).sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name))
+            .map(id => `<option value="${id}">${store.categories[id].name}</option>`).join('');
     }
-    function toggleLock() {
+
+    window.toggleLock = () => {
         if (isUnlocked) { isUnlocked = false; render(); document.getElementById('lockBtn').innerHTML = "🔒 НОРМИ"; }
         else { document.getElementById('passwordModal').style.display = 'flex'; document.getElementById('passInput').focus(); }
-    }
-    function checkPass() {
-        if (document.getElementById('passInput').value === PIN) { isUnlocked = true; closePass(); render(); document.getElementById('lockBtn').innerHTML = "🔓 БЛОКУВАТИ"; }
-        else { alert('Невірний пароль'); }
-    }
-    function closePass() { document.getElementById('passwordModal').style.display = 'none'; document.getElementById('passInput').value = ''; }
+    };
 
-    async function shareToTelegram() {
+    window.checkPass = () => {
+        if (document.getElementById('passInput').value === PIN) { isUnlocked = true; closePass(); render(); document.getElementById('lockBtn').innerHTML = "🔓 БЛОКУВАТИ"; }
+        else alert('Невірний пароль');
+    };
+
+    window.closePass = () => { document.getElementById('passwordModal').style.display = 'none'; document.getElementById('passInput').value = ''; };
+
+    window.deleteItem = (id) => {
+        if (confirm('Видалити цей товар?')) {
+            window.fRemove(window.fRef(window.db, `${DB_KEY}/items/${id}`));
+        }
+    };
+
+    window.deleteCat = (id) => {
+        if (confirm('Видалити весь розділ та всі товари в ньому?')) {
+            window.fRemove(window.fRef(window.db, `${DB_KEY}/categories/${id}`));
+            Object.keys(store.items).forEach(iid => {
+                if (store.items[iid].catId === id) window.fRemove(window.fRef(window.db, `${DB_KEY}/items/${iid}`));
+            });
+        }
+    };
+
+    window.shareToTelegram = async () => {
         let message = "🔥 *ЗАМОВЛЕННЯ: МАНГАЛ ТА ЗАГОТІВЕЛЬНИЙ*\n";
-        const isWe = getIsWeekend();
+        const isWe = window.getIsWeekend();
         message += `📅 Дата: ${new Date().toLocaleDateString('uk-UA')}\n📊 Режим: *${isWe ? "ВИХІДНІ" : "БУДНІ"}*\n\n`;
         let hasOrder = false;
         
@@ -302,7 +323,7 @@
             });
             alert("✅ Відправлено!");
         } catch(e) { alert("❌ Помилка"); }
-    }
+    };
 </script>
 </body>
 </html>
