@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Мангал & Заготівля</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    
+    <title>Мангал та Заготівельний - Баранчик</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -22,259 +22,287 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        
         window.db = db;
         window.fRef = ref;
         window.fSet = set;
         window.fOnValue = onValue;
         window.fPush = push;
         window.fRemove = remove;
-        
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        /* Адаптивність таблиці */
-        @media (max-width: 768px) {
-            .mobile-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-            table { min-width: 650px; }
-            .sticky-col { position: sticky; left: 0; background: white; z-index: 10; border-right: 1px solid #f1f5f9; }
+        :root {
+            --bg: #0a0a0f;
+            --surface: #111118;
+            --surface2: #18181f;
+            --border: #252530;
+            --accent: #f97316;
+            --text: #e8e8f0;
+            --text-dim: #5a5a70;
+            --text-muted: #35354a;
+            --green: #22c55e;
+            --red: #ef4444;
+            --header-bg: rgba(10,10,15,0.9);
         }
-        /* Прибираємо стрілки в інпутах */
-        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
-        .input-focus:focus { outline: 2px solid #f97316; background: white; }
+
+        body.light {
+            --bg: #f1f5f9;
+            --surface: #ffffff;
+            --surface2: #f8fafc;
+            --border: #e2e8f0;
+            --accent: #ea580c;
+            --text: #0f172a;
+            --text-dim: #64748b;
+            --text-muted: #94a3b8;
+            --header-bg: rgba(255,255,255,0.92);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s; }
+
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+        .auth-title { font-size: 20px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 25px; text-align: center; }
+        #auth-pin { width: 270px; background: var(--surface); border: 1.5px solid var(--border); color: var(--text); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 32px; padding: 20px; border-radius: 20px; outline: none; margin-bottom: 15px; }
+
+        header { background: var(--header-bg); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 16px 20px; position: relative; z-index: 40; }
+        .header-inner { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .logo-mark { font-size: 16px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; font-style: italic; }
+        
+        main { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
+        @media (max-width: 650px) { .controls-grid { grid-template-columns: 1fr; } }
+
+        .control-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 16px; }
+        .control-row { display: flex; gap: 8px; }
+        select, input[type="text"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Syne', sans-serif; font-size: 12px; padding: 10px; border-radius: 12px; outline: none; flex: 1; }
+        .ctrl-btn { background: var(--accent); color: white; font-weight: 800; padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer; }
+
+        .category-block { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; margin-bottom: 20px; }
+        .cat-header { display: flex; justify-content: space-between; padding: 12px 20px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+        .cat-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        table { width: 100%; border-collapse: collapse; min-width: 700px; table-layout: fixed; }
+        th { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted); padding: 12px 5px; text-transform: uppercase; text-align: center; }
+        
+        th:nth-child(1), td:nth-child(1) { width: 25%; text-align: left; padding-left: 20px; } 
+        th:nth-child(2), td:nth-child(2) { width: 13%; } 
+        th:nth-child(3), td:nth-child(3) { width: 13%; } 
+        th:nth-child(4), td:nth-child(4) { width: 11%; } 
+        th:nth-child(5), td:nth-child(5) { width: 11%; } 
+        th:nth-child(6), td:nth-child(6) { width: 15%; } 
+
+        td { padding: 8px 5px; vertical-align: middle; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .item-name { font-size: 13px; font-weight: 600; }
+        
+        input[type="number"] { width: 100%; padding: 10px 2px; text-align: center; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; border: 1px solid transparent; outline: none; transition: 0.2s; }
+        .inp-stock { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.2); color: var(--accent); }
+        .inp-norm { background: var(--surface2); border-color: var(--border); color: var(--text-dim); }
+        .inp-readonly { opacity: 0.3; pointer-events: none; }
+        
+        /* Червона індикація якщо треба замовити */
+        .need-badge { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 8px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 800; display: block; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2); }
+        .done-mark { color: var(--green); opacity: 0.2; font-size: 10px; text-align: center; }
+
+        .hbtn { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; background: var(--surface2); color: var(--text-dim); }
+        .theme-btn { font-size: 14px; padding: 8px 12px; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 500; backdrop-filter: blur(8px); }
+        .modal-box { background: var(--surface); padding: 30px; border-radius: 30px; text-align: center; width: 300px; border: 1px solid var(--border); }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen pb-10 font-sans text-slate-800">
+<body>
 
-    <div class="max-w-6xl mx-auto p-2 md:p-6">
+<div id="auth-screen">
+    <div style="font-size: 40px; margin-bottom: 10px;">👨‍🍳</div>
+    <div class="auth-title">Мангал та Заготівельний</div>
+    <input type="password" id="auth-pin" inputmode="numeric" placeholder="••••" onkeydown="if(event.key==='Enter') checkAuth()">
+    <button class="ctrl-btn" style="width: 270px; padding: 18px;" onclick="checkAuth()">УВІЙТИ</button>
+</div>
+
+<div id="app-content" style="display: none;">
+    <header>
+        <div class="header-inner">
+            <div>
+                <div class="logo-mark">🔥 МАНГАЛ ТА ЗАГОТІВЕЛЬНИЙ</div>
+                <div id="date-label" style="font-family: 'JetBrains Mono'; font-size: 8px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase;"></div>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button class="hbtn theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+                <button class="hbtn" style="background: rgba(0,136,204,0.1); color: #38bdf8;" onclick="shareToTelegram()">✈️ ВІДПРАВИТИ</button>
+                <button class="hbtn" id="lockBtn" onclick="toggleLock()">🔒 НОРМИ</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="controls-grid">
+            <div class="control-card">
+                <div class="control-row">
+                    <select id="selCat"></select>
+                    <input type="text" id="inpName" placeholder="Назва товару...">
+                    <button class="ctrl-btn" onclick="addItem()">+</button>
+                </div>
+            </div>
+            <div class="control-card">
+                <div class="control-row">
+                    <input type="text" id="inpCat" placeholder="НОВИЙ РОЗДІЛ...">
+                    <button class="ctrl-btn" style="background: var(--text-muted)" onclick="addCategory()">OK</button>
+                </div>
+            </div>
+        </div>
+        <div id="checklist-container"></div>
+    </main>
+</div>
+
+<div class="modal-overlay" id="passwordModal">
+    <div class="modal-box">
+        <div style="font-weight: 800; margin-bottom: 20px;">🔐 ПАРОЛЬ АДМІНІСТРАТОРА</div>
+        <input type="password" id="passInput" style="width: 100%; background: var(--surface2); border: 1px solid var(--border); color: white; text-align: center; font-size: 24px; padding: 15px; border-radius: 15px; margin-bottom: 20px;" onkeydown="if(event.key==='Enter') checkPass()">
+        <div style="display: flex; gap: 10px;">
+            <button class="ctrl-btn" style="flex: 1;" onclick="checkPass()">ОК</button>
+            <button class="hbtn" style="flex: 1;" onclick="closePass()">Х</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const PIN = "3196";
+    const DB_KEY = 'mangal'; 
+    const TG_TOKEN = "7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38"; 
+    const TG_CHAT_ID = "-1002336484919"; 
+    const TG_THREAD_ID = 15; 
+
+    let isUnlocked = false;
+    let store = { categories: {}, items: {} };
+
+    // Темна/Світла тема
+    function toggleTheme() {
+        const isLight = document.body.classList.toggle('light');
+        document.getElementById('themeBtn').textContent = isLight ? '☀️' : '🌙';
+        localStorage.setItem('theme', isLight ? 'light' : 'dark');
+    }
+
+    if (localStorage.getItem('theme') === 'light') {
+        document.body.classList.add('light');
+        document.getElementById('themeBtn').textContent = '☀️';
+    }
+
+    function checkAuth() {
+        if (document.getElementById('auth-pin').value === "2024") {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+        } else {
+            alert("Невірний PIN");
+        }
+    }
+
+    function getIsWeekend() { return [0, 5, 6].includes(new Date().getDay()); }
+
+    window.addEventListener('firebase-ready', () => {
+        document.getElementById('date-label').textContent = new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+        window.fOnValue(window.fRef(window.db, DB_KEY), snap => {
+            const val = snap.val() || {};
+            store.categories = val.categories || {};
+            store.items = val.items || {};
+            render();
+            updateSelect();
+        });
+    });
+
+    function render() {
+        const container = document.getElementById('checklist-container');
+        const isWe = getIsWeekend();
+        const catIds = Object.keys(store.categories).sort((a, b) => store.categories[a].name.localeCompare(store.categories[b].name));
         
-        <div class="bg-white p-5 rounded-3xl shadow-sm border-b-4 border-orange-500 mb-6">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="text-center md:text-left">
-                    <h1 class="text-2xl font-black text-slate-800 italic uppercase tracking-tighter">🔥 Мангал & Заготівля</h1>
-                    <p id="date" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1"></p>
-                </div>
-                
-                <div class="flex flex-wrap justify-center gap-2">
-                    <button onclick="sendToBot(event)" class="bg-sky-500 text-white px-6 py-3 rounded-2xl text-xs font-black shadow-lg shadow-sky-100 hover:bg-sky-600 transition-all flex items-center gap-2 uppercase">
-                        ✈️ Відправити звіт
-                    </button>
-                    <button onclick="clearStocks()" class="bg-white text-red-500 border border-red-100 px-4 py-3 rounded-2xl text-xs font-bold hover:bg-red-50 transition-colors">ОЧИСТИТИ</button>
-                    <button onclick="toggleLock()" id="lockBtn" class="bg-slate-800 text-white px-5 py-3 rounded-2xl text-xs font-bold shadow-lg">🔒 НОРМИ</button>
-                </div>
-            </div>
-        </div>
+        container.innerHTML = catIds.map(catId => {
+            const items = Object.keys(store.items).filter(id => store.items[id].catId === catId).sort((a, b) => store.items[a].name.localeCompare(store.items[b].name));
+            const rows = items.map(itemId => {
+                const i = store.items[itemId];
+                const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
+                const norm = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
+                const order = Math.max(0, norm - total);
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest">Додати позицію</p>
-                <div class="flex gap-2">
-                    <select id="selCat" class="bg-slate-50 border-none rounded-2xl px-3 py-3 text-xs font-bold w-1/3 outline-none"></select>
-                    <input type="text" id="inpName" placeholder="Назва товару..." class="bg-slate-50 border-none rounded-2xl px-4 py-3 text-xs font-bold flex-1 outline-none focus:ring-2 focus:ring-orange-500">
-                    <button onclick="addItem()" class="bg-orange-500 text-white px-6 rounded-2xl font-black shadow-lg shadow-orange-100 transition-transform active:scale-90">+</button>
-                </div>
-            </div>
-            
-            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100">
-                <p class="text-[10px] font-black text-slate-400 mb-4 uppercase tracking-widest">Новий розділ</p>
-                <div class="flex gap-2">
-                    <input type="text" id="inpCat" placeholder="М'ЯСО, ОВОЧІ..." class="bg-slate-50 border-none rounded-2xl px-4 py-3 text-xs font-bold flex-1 outline-none focus:ring-2 focus:ring-slate-800">
-                    <button onclick="addCategory()" class="bg-slate-800 text-white px-6 rounded-2xl font-bold text-xs uppercase transition-transform active:scale-90">Створити</button>
-                </div>
-            </div>
-        </div>
+                return `<tr>
+                    <td><div class="item-name">${isUnlocked ? `<span onclick="deleteItem('${itemId}')" style="color:red;margin-right:8px;cursor:pointer">✕</span>` : ''}${i.name}</div></td>
+                    <td><input type="number" step="0.1" value="${i.s_m || ''}" onchange="upd('${itemId}','s_m',this.value)" class="inp-stock"></td>
+                    <td><input type="number" step="0.1" value="${i.s_z || ''}" onchange="upd('${itemId}','s_z',this.value)" class="inp-stock" style="background:rgba(255,255,255,0.03)"></td>
+                    <td><input type="number" step="0.1" value="${i.wd || ''}" ${!isUnlocked?'readonly':''} onchange="upd('${itemId}','wd',this.value)" class="${isUnlocked?'inp-norm':'inp-norm inp-readonly'}"></td>
+                    <td><input type="number" step="0.1" value="${i.we || ''}" ${!isUnlocked?'readonly':''} onchange="upd('${itemId}','we',this.value)" class="${isUnlocked?'inp-norm':'inp-norm inp-readonly'}"></td>
+                    <td>${order > 0 ? `<span class="need-badge">${order.toFixed(1)}</span>` : `<div class="done-mark">✓</div>`}</td>
+                </tr>`;
+            }).join('');
 
-        <div id="checklist-container" class="space-y-8">
-            <div class="text-center py-20 text-slate-300 font-bold uppercase tracking-widest animate-pulse">Завантаження бази...</div>
-        </div>
-    </div>
+            return `<div class="category-block">
+                <div class="cat-header"><span class="cat-title">${store.categories[catId].name}</span>${isUnlocked ? `<span onclick="deleteCat('${catId}')" style="color:red;font-size:9px;cursor:pointer">ВИДАЛИТИ РОЗДІЛ</span>` : ''}</div>
+                <div class="table-wrap"><table>
+                    <thead><tr><th>ТОВАР</th><th>МАНГАЛ</th><th>ЗАГОТ.</th><th>БД</th><th>ВХ</th><th>ТРЕБА</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table></div>
+            </div>`;
+        }).join('');
+    }
 
-    <div id="passwordModal" class="fixed inset-0 bg-slate-900/60 hidden items-center justify-center z-50 backdrop-blur-sm p-4">
-        <div class="bg-white p-8 rounded-[2.5rem] shadow-2xl w-full max-w-xs text-center border border-white/20">
-            <p class="font-black text-slate-800 mb-2 uppercase tracking-tight">Режим редагування</p>
-            <input type="password" id="passInput" class="w-full bg-slate-100 border-none p-5 mb-6 text-center rounded-2xl outline-none text-2xl font-black tracking-widest focus:ring-2 focus:ring-orange-500">
-            <div class="flex gap-2">
-                <button onclick="checkPass()" class="flex-1 bg-orange-500 text-white py-4 rounded-2xl font-bold uppercase text-xs shadow-lg shadow-orange-100">УВІЙТИ</button>
-                <button onclick="closePass()" class="flex-1 bg-slate-100 py-4 rounded-2xl font-bold text-slate-400 uppercase text-xs">X</button>
-            </div>
-        </div>
-    </div>
+    function upd(id, f, v) { window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/${f}`), v); }
+    function addItem() {
+        const name = document.getElementById('inpName').value;
+        const catId = document.getElementById('selCat').value;
+        if (name && catId) {
+            window.fPush(window.fRef(window.db, `${DB_KEY}/items`), { name, catId, s_m: '', s_z: '', wd: 0, we: 0 });
+            document.getElementById('inpName').value = '';
+        }
+    }
+    function addCategory() {
+        const name = document.getElementById('inpCat').value.toUpperCase();
+        if (name) { window.fPush(window.fRef(window.db, `${DB_KEY}/categories`), { name }); document.getElementById('inpCat').value = ''; }
+    }
+    function updateSelect() {
+        document.getElementById('selCat').innerHTML = Object.keys(store.categories).map(id => `<option value="${id}">${store.categories[id].name}</option>`).join('');
+    }
+    function toggleLock() {
+        if (isUnlocked) { isUnlocked = false; render(); document.getElementById('lockBtn').innerHTML = "🔒 НОРМИ"; }
+        else { document.getElementById('passwordModal').style.display = 'flex'; document.getElementById('passInput').focus(); }
+    }
+    function checkPass() {
+        if (document.getElementById('passInput').value === PIN) { isUnlocked = true; closePass(); render(); document.getElementById('lockBtn').innerHTML = "🔓 БЛОКУВАТИ"; }
+        else { alert('Невірний пароль'); }
+    }
+    function closePass() { document.getElementById('passwordModal').style.display = 'none'; document.getElementById('passInput').value = ''; }
 
-    <script>
-        // ==========================================
-        // НАЛАШТУВАННЯ (ВСТАВ СВОЇ ДАНІ)
-        // ==========================================
-        const BOT_TOKEN = "7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38"; 
-        const CHAT_ID = "-1002336484919";
-        const DB_KEY = 'mangal'; 
-        const PIN = "3196";
-        // ==========================================
-
-        let isUnlocked = false;
-        let store = { categories: {}, items: {} };
-
-        window.addEventListener('firebase-ready', () => {
-            const now = new Date();
-            document.getElementById('date').textContent = now.toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-            
-            window.fOnValue(window.fRef(window.db, DB_KEY), (snap) => {
-                const data = snap.val() || {};
-                store.categories = data.categories || {};
-                store.items = data.items || {};
-                render();
-                updateSelect();
+    async function shareToTelegram() {
+        let message = "🔥 *ЗАМОВЛЕННЯ: МАНГАЛ ТА ЗАГОТІВЕЛЬНИЙ*\n";
+        const isWe = getIsWeekend();
+        message += `📅 Дата: ${new Date().toLocaleDateString('uk-UA')}\n📊 Режим: *${isWe ? "ВИХІДНІ" : "БУДНІ"}*\n\n`;
+        let hasOrder = false;
+        
+        Object.keys(store.categories).sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name)).forEach(cid => {
+            let catPart = `*${store.categories[cid].name}:*\n`;
+            let itemsFound = false;
+            Object.keys(store.items).filter(id => store.items[id].catId === cid).forEach(iid => {
+                const i = store.items[iid];
+                const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
+                const norm = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
+                const order = Math.max(0, norm - total);
+                if (order > 0) { catPart += `• ${i.name}: *${order.toFixed(1)}*\n`; itemsFound = true; hasOrder = true; }
             });
+            if (itemsFound) message += catPart + "\n";
         });
 
-        function render() {
-            const container = document.getElementById('checklist-container');
-            let html = '';
-            const sortedCats = Object.keys(store.categories).sort((a, b) => store.categories[a].name.localeCompare(store.categories[b].name));
+        if (!hasOrder) return alert("Все в нормі!");
 
-            sortedCats.forEach(cid => {
-                html += `
-                <div class="bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden">
-                    <div class="bg-slate-800 text-white px-6 py-4 font-black text-[10px] flex justify-between items-center uppercase tracking-[0.2em]">
-                        ${store.categories[cid].name}
-                        ${isUnlocked ? `<button onclick="deleteCat('${cid}')" class="text-red-400 hover:text-red-300">Видалити розділ</button>` : ''}
-                    </div>
-                    <div class="mobile-scroll overflow-x-auto">
-                        <table class="w-full text-left">
-                            <thead>
-                                <tr class="bg-slate-50/50 text-[9px] text-slate-400 uppercase font-black border-b border-slate-100">
-                                    <th class="p-5 sticky-col min-w-[160px]">Товар</th>
-                                    <th class="p-2 w-24 text-center">Мангал</th>
-                                    <th class="p-2 w-24 text-center">Заготівля</th>
-                                    <th class="p-2 w-20 text-center">Будні</th>
-                                    <th class="p-2 w-20 text-center border-r">Вихідні</th>
-                                    <th class="p-5 w-24 text-orange-600 text-center bg-orange-50/30 font-black">ТРЕБА</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-50">`;
-
-                Object.keys(store.items)
-                    .filter(id => store.items[id].catId === cid)
-                    .sort((a, b) => store.items[a].name.localeCompare(store.items[b].name))
-                    .forEach(iid => {
-                        const item = store.items[iid];
-                        const sm = parseFloat(item.s_m) || 0;
-                        const sz = parseFloat(item.s_z) || 0;
-                        const total = sm + sz;
-                        
-                        const isWeekend = [0, 5, 6].includes(new Date().getDay());
-                        const norm = isWeekend ? (parseFloat(item.we) || 0) : (parseFloat(item.wd) || 0);
-                        const order = Math.max(0, norm - total);
-
-                        html += `
-                        <tr class="hover:bg-slate-50/50 transition-colors">
-                            <td class="p-5 font-bold text-slate-700 text-xs sticky-col">
-                                <div class="flex items-center gap-2">
-                                    ${isUnlocked ? `<button onclick="deleteItem('${iid}')" class="text-red-300 hover:text-red-500">✕</button>` : ''}
-                                    ${item.name}
-                                </div>
-                            </td>
-                            <td class="p-2">
-                                <input type="number" step="0.1" value="${item.s_m || ''}" onchange="upd('${iid}','s_m',this.value)" class="w-full bg-slate-100/50 rounded-xl py-3 text-center font-black text-sm outline-none input-focus transition-all">
-                            </td>
-                            <td class="p-2">
-                                <input type="number" step="0.1" value="${item.s_z || ''}" onchange="upd('${iid}','s_z',this.value)" class="w-full bg-slate-100/50 rounded-xl py-3 text-center font-black text-sm outline-none input-focus transition-all">
-                            </td>
-                            <td class="p-2">
-                                <input type="number" step="0.1" value="${item.wd || ''}" ${!isUnlocked ? 'readonly' : ''} onchange="upd('${iid}','wd',this.value)" class="w-full ${!isUnlocked?'bg-transparent text-slate-300':'bg-white border text-slate-600'} rounded-lg py-2 text-center font-bold text-xs">
-                            </td>
-                            <td class="p-2 border-r">
-                                <input type="number" step="0.1" value="${item.we || ''}" ${!isUnlocked ? 'readonly' : ''} onchange="upd('${iid}','we',this.value)" class="w-full ${!isUnlocked?'bg-transparent text-slate-300':'bg-white border text-slate-600'} rounded-lg py-2 text-center font-bold text-xs">
-                            </td>
-                            <td class="p-5 text-center font-black text-sm text-orange-600 bg-orange-50/30">
-                                ${order > 0 ? order.toFixed(1) : '<span class="text-green-500 opacity-20 text-[10px]">✓</span>'}
-                            </td>
-                        </tr>`;
-                    });
-                html += `</tbody></table></div></div>`;
+        try {
+            await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: TG_CHAT_ID, message_thread_id: TG_THREAD_ID, text: message, parse_mode: 'Markdown' })
             });
-            container.innerHTML = html || '<div class="text-center py-20 text-slate-300 font-bold uppercase tracking-widest text-xs">База порожня</div>';
-        }
-
-        async function sendToBot(event) {
-            const btn = event.currentTarget;
-            const originalText = btn.innerHTML;
-            let message = "🔥 *ЗАМОВЛЕННЯ: МАНГАЛ & ЗАГОТІВЛЯ*\n";
-            const isWeekend = [0, 5, 6].includes(new Date().getDay());
-            message += `📅 Дата: ${new Date().toLocaleDateString('uk-UA')}\n📊 Режим: *${isWeekend ? "ВИХІДНІ" : "БУДНІ"}*\n\n`;
-
-            let hasItems = false;
-            Object.keys(store.categories).sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name)).forEach(cid => {
-                let catPart = `*${store.categories[cid].name}:*\n`;
-                let catItems = false;
-                Object.keys(store.items).filter(id => store.items[id].catId === cid).forEach(iid => {
-                    const item = store.items[iid];
-                    const total = (parseFloat(item.s_m) || 0) + (parseFloat(item.s_z) || 0);
-                    const norm = isWeekend ? (parseFloat(item.we) || 0) : (parseFloat(item.wd) || 0);
-                    const order = Math.max(0, norm - total);
-                    if (order > 0) {
-                        catPart += `• ${item.name}: *${order.toFixed(1)}*\n`;
-                        catItems = true; hasItems = true;
-                    }
-                });
-                if (catItems) message += catPart + "\n";
-            });
-
-            if (!hasItems) return alert("Все в нормі!");
-
-            btn.disabled = true;
-            btn.innerHTML = "⏳ НАДСИЛАЮ...";
-
-            try {
-                const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: CHAT_ID, text: message, parse_mode: 'Markdown' })
-                });
-                if (response.ok) alert("✅ Звіт надіслано!");
-                else alert("❌ Помилка Телеграм.");
-            } catch (e) { alert("❌ Помилка з'єднання."); }
-            finally { btn.disabled = false; btn.innerHTML = originalText; }
-        }
-
-        window.upd = (id, f, v) => window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/${f}`), v);
-        window.addItem = () => {
-            const name = document.getElementById('inpName').value;
-            const catId = document.getElementById('selCat').value;
-            if (name && catId) {
-                window.fPush(window.fRef(window.db, `${DB_KEY}/items`), { name, catId, s_m: '', s_z: '', wd: 0, we: 0 });
-                document.getElementById('inpName').value = '';
-            }
-        };
-        window.addCategory = () => {
-            const name = document.getElementById('inpCat').value.toUpperCase();
-            if (name) { window.fPush(window.fRef(window.db, `${DB_KEY}/categories`), { name }); document.getElementById('inpCat').value = ''; }
-        };
-        window.clearStocks = () => {
-            if (confirm('Очистити залишки?')) {
-                Object.keys(store.items).forEach(id => {
-                    window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/s_m`), '');
-                    window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/s_z`), '');
-                });
-            }
-        };
-        window.deleteItem = (id) => confirm('Видалити товар?') && window.fRemove(window.fRef(window.db, `${DB_KEY}/items/${id}`));
-        window.deleteCat = (id) => confirm('Видалити весь розділ?') && window.fRemove(window.fRef(window.db, `${DB_KEY}/categories/${id}`));
-        window.updateSelect = () => {
-            const sel = document.getElementById('selCat');
-            sel.innerHTML = Object.keys(store.categories).sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name))
-                .map(id => `<option value="${id}">${store.categories[id].name}</option>`).join('') || '<option>...</option>';
-        };
-        window.toggleLock = () => {
-            if (isUnlocked) { isUnlocked = false; render(); document.getElementById('lockBtn').innerHTML = "🔒 НОРМИ"; }
-            else { document.getElementById('passwordModal').style.display = 'flex'; document.getElementById('passInput').focus(); }
-        };
-        window.checkPass = () => {
-            if (document.getElementById('passInput').value === PIN) { isUnlocked = true; closePass(); render(); document.getElementById('lockBtn').innerHTML = "🔓 БЛОКУВАТИ"; }
-            else alert('Невірний пароль');
-        };
-        window.closePass = () => { document.getElementById('passwordModal').style.display = 'none'; document.getElementById('passInput').value = ''; };
-    </script>
+            alert("✅ Відправлено!");
+        } catch(e) { alert("❌ Помилка"); }
+    }
+</script>
 </body>
 </html>
