@@ -199,7 +199,8 @@
         }
     };
 
-    window.getIsWeekend = () => [0, 5, 6].includes(new Date().getDay());
+    // ПРАВКА ТУТ: тепер вихідний визначається для наступного дня
+    window.getIsWeekend = () => [0, 5, 6].includes((new Date().getDay() + 1) % 7);
 
     window.addEventListener('firebase-ready', () => {
         document.getElementById('date-label').textContent = new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
