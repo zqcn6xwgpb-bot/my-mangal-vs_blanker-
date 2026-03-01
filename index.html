@@ -47,6 +47,7 @@
             --green: #22c55e;
             --red: #ef4444;
             --header-bg: rgba(10,10,15,0.9);
+            --shadow: rgba(0,0,0,0.4);
         }
 
         body.light {
@@ -59,79 +60,239 @@
             --text-dim: #64748b;
             --text-muted: #94a3b8;
             --header-bg: rgba(255,255,255,0.92);
+            --shadow: rgba(0,0,0,0.1);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s; }
+        body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
 
-        #auth-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
-        .auth-title { font-size: 20px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 25px; text-align: center; }
-        #auth-pin { width: 270px; background: var(--surface); border: 1.5px solid var(--border); color: var(--text); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 32px; padding: 20px; border-radius: 20px; outline: none; margin-bottom: 15px; }
+        /* ── AUTH ── */
+        #auth-screen {
+            position: fixed; inset: 0; background: var(--bg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; gap: 16px;
+        }
+        .auth-logo { font-size: 52px; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
+        .auth-title { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; opacity: 0.9; }
+        .auth-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; }
+        #auth-pin {
+            width: 270px; background: var(--surface); border: 1.5px solid var(--border);
+            color: var(--text); text-align: center; font-family: 'JetBrains Mono', monospace;
+            font-size: 32px; padding: 20px; border-radius: 20px; outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #auth-pin:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(249,115,22,0.15); }
+        #auth-pin.shake { animation: shake 0.4s; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
+        .auth-btn {
+            width: 270px; padding: 18px; background: var(--accent); color: white;
+            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px;
+            letter-spacing: 0.1em; border: none; border-radius: 16px; cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+        .auth-btn:hover { opacity: 0.9; }
+        .auth-btn:active { transform: scale(0.98); }
 
-        header { background: var(--header-bg); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 16px 20px; position: relative; z-index: 40; }
+        /* ── HEADER ── */
+        header {
+            background: var(--header-bg); backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border); padding: 14px 20px;
+            position: sticky; top: 0; z-index: 40;
+        }
         .header-inner { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .logo-mark { font-size: 16px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; font-style: italic; }
-        
+        .logo-mark { font-size: 15px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; font-style: italic; }
+        .header-meta { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+        #date-label { font-family: 'JetBrains Mono'; font-size: 8px; color: var(--text-dim); text-transform: uppercase; }
+        /* Firebase status dot */
+        #fb-status { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s; flex-shrink: 0; }
+        #fb-status.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+
+        /* ── MAIN ── */
         main { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+
+        /* Weekend badge */
+        .mode-badge {
+            font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+            padding: 4px 10px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .mode-badge.weekend { background: rgba(249,115,22,0.15); color: var(--accent); border: 1px solid rgba(249,115,22,0.3); }
+        .mode-badge.weekday { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+
         .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
         @media (max-width: 650px) { .controls-grid { grid-template-columns: 1fr; } }
 
-        .control-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 16px; }
+        .control-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 14px; }
+        .control-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
         .control-row { display: flex; gap: 8px; }
-        select, input[type="text"] { background: var(--surface2); border: 1px solid var(--border); color: var(--text); font-family: 'Syne', sans-serif; font-size: 12px; padding: 10px; border-radius: 12px; outline: none; flex: 1; }
-        .ctrl-btn { background: var(--accent); color: white; font-weight: 800; padding: 10px 20px; border-radius: 12px; border: none; cursor: pointer; }
+        select, input[type="text"] {
+            background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+            font-family: 'Syne', sans-serif; font-size: 12px; padding: 10px 12px;
+            border-radius: 12px; outline: none; flex: 1;
+            transition: border-color 0.2s;
+        }
+        select:focus, input[type="text"]:focus { border-color: var(--accent); }
 
-        .category-block { background: var(--surface); border: 1px solid var(--border); border-radius: 22px; overflow: hidden; margin-bottom: 20px; }
-        .cat-header { display: flex; justify-content: space-between; padding: 12px 20px; background: var(--surface2); border-bottom: 1px solid var(--border); }
-        .cat-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; }
+        .ctrl-btn {
+            background: var(--accent); color: white; font-weight: 800; font-size: 16px;
+            padding: 10px 18px; border-radius: 12px; border: none; cursor: pointer;
+            transition: opacity 0.2s, transform 0.1s; flex-shrink: 0;
+        }
+        .ctrl-btn:hover { opacity: 0.88; }
+        .ctrl-btn:active { transform: scale(0.95); }
+
+        /* ── CATEGORY TABLE ── */
+        .category-block {
+            background: var(--surface); border: 1px solid var(--border);
+            border-radius: 22px; overflow: hidden; margin-bottom: 20px;
+            animation: fadeUp 0.3s ease both;
+        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--surface2); border-bottom: 1px solid var(--border); }
+        .cat-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
 
         .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 700px; table-layout: fixed; }
-        th { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted); padding: 12px 5px; text-transform: uppercase; text-align: center; }
-        
-        th:nth-child(1), td:nth-child(1) { width: 25%; text-align: left; padding-left: 20px; } 
-        th:nth-child(2), td:nth-child(2) { width: 13%; } 
-        th:nth-child(3), td:nth-child(3) { width: 13%; } 
-        th:nth-child(4), td:nth-child(4) { width: 11%; } 
-        th:nth-child(5), td:nth-child(5) { width: 11%; } 
-        th:nth-child(6), td:nth-child(6) { width: 15%; } 
+        table { width: 100%; border-collapse: collapse; min-width: 680px; table-layout: fixed; }
+        th {
+            font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted);
+            padding: 10px 5px; text-transform: uppercase; text-align: center; letter-spacing: 0.07em;
+        }
+        th:nth-child(1), td:nth-child(1) { width: 26%; text-align: left; padding-left: 20px; }
+        th:nth-child(2), td:nth-child(2) { width: 13%; }
+        th:nth-child(3), td:nth-child(3) { width: 13%; }
+        th:nth-child(4), td:nth-child(4) { width: 11%; }
+        th:nth-child(5), td:nth-child(5) { width: 11%; }
+        th:nth-child(6), td:nth-child(6) { width: 16%; }
 
-        td { padding: 8px 5px; vertical-align: middle; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .item-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; }
-        
-        input[type="number"] { width: 100%; padding: 10px 2px; text-align: center; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; border: 1px solid transparent; outline: none; transition: 0.2s; }
+        td { padding: 7px 5px; vertical-align: middle; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
+        body.light td { border-bottom-color: rgba(0,0,0,0.04); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(249,115,22,0.03); }
+
+        .item-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .del-btn { color: var(--red); cursor: pointer; font-weight: 800; font-size: 12px; opacity: 0.6; transition: opacity 0.15s; flex-shrink: 0; line-height: 1; }
+        .del-btn:hover { opacity: 1; }
+
+        input[type="number"] {
+            width: 100%; padding: 9px 4px; text-align: center;
+            border-radius: 10px; font-family: 'JetBrains Mono', monospace;
+            font-size: 13px; font-weight: 700; border: 1px solid transparent;
+            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+            -moz-appearance: textfield;
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
         .inp-stock { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.2); color: var(--accent); }
+        .inp-stock:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(249,115,22,0.15); }
+        .inp-stock-z { background: rgba(255,255,255,0.03); border-color: rgba(249,115,22,0.1); color: var(--accent); }
+        body.light .inp-stock-z { background: rgba(249,115,22,0.04); }
         .inp-norm { background: var(--surface2); border-color: var(--border); color: var(--text-dim); }
+        .inp-norm:focus { border-color: var(--text-dim); }
         .inp-readonly { opacity: 0.3; pointer-events: none; }
-        
-        .need-badge { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 8px; border-radius: 10px; font-family: 'JetBrains Mono', monospace; font-weight: 800; display: block; text-align: center; border: 1px solid rgba(239, 68, 68, 0.2); }
-        .done-mark { color: var(--green); opacity: 0.2; font-size: 10px; text-align: center; }
 
-        .hbtn { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; padding: 8px 14px; border-radius: 12px; border: 1px solid var(--border); cursor: pointer; background: var(--surface2); color: var(--text-dim); }
+        .need-badge {
+            background: rgba(239,68,68,0.12); color: var(--red);
+            padding: 8px 6px; border-radius: 10px;
+            font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 13px;
+            display: block; text-align: center; border: 1px solid rgba(239,68,68,0.2);
+        }
+        .done-mark { color: var(--green); opacity: 0.25; font-size: 14px; text-align: center; }
+
+        /* ── HEADER BUTTONS ── */
+        .hbtn {
+            font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
+            padding: 8px 14px; border-radius: 12px; border: 1px solid var(--border);
+            cursor: pointer; background: var(--surface2); color: var(--text-dim);
+            transition: background 0.2s, color 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+        .hbtn:hover { background: var(--border); }
+        .hbtn:active { transform: scale(0.95); }
         .theme-btn { font-size: 14px; padding: 8px 12px; }
+        .tg-btn { background: rgba(0,136,204,0.1); color: #38bdf8; border-color: rgba(56,189,248,0.2); }
+        .tg-btn:hover { background: rgba(0,136,204,0.2); }
 
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 500; backdrop-filter: blur(8px); }
-        .modal-box { background: var(--surface); padding: 30px; border-radius: 30px; text-align: center; width: 300px; border: 1px solid var(--border); }
+        /* ── DELETE CAT BUTTON ── */
+        .cat-del-btn {
+            font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
+            color: var(--red); opacity: 0.5; cursor: pointer; padding: 4px 8px;
+            border-radius: 8px; border: 1px solid transparent; transition: all 0.15s;
+            text-transform: uppercase;
+        }
+        .cat-del-btn:hover { opacity: 1; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
+
+        /* ── MODAL ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+            display: none; align-items: center; justify-content: center;
+            z-index: 500; backdrop-filter: blur(10px);
+        }
+        .modal-box {
+            background: var(--surface); padding: 28px; border-radius: 28px;
+            text-align: center; width: 300px; border: 1px solid var(--border);
+            animation: popIn 0.2s ease;
+        }
+        @keyframes popIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
+        .modal-title { font-weight: 800; margin-bottom: 18px; font-size: 14px; }
+        #passInput {
+            width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
+            color: var(--text); text-align: center; font-family: 'JetBrains Mono', monospace;
+            font-size: 24px; padding: 14px; border-radius: 14px; margin-bottom: 18px; outline: none;
+            transition: border-color 0.2s;
+        }
+        #passInput:focus { border-color: var(--accent); }
+        .modal-btns { display: flex; gap: 10px; }
+
+        /* ── TOAST ── */
+        #toast {
+            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: var(--surface); border: 1px solid var(--border); color: var(--text);
+            font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
+            padding: 12px 22px; border-radius: 50px; z-index: 9000;
+            box-shadow: 0 8px 32px var(--shadow);
+            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s;
+            opacity: 0; pointer-events: none; white-space: nowrap;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #toast.success { border-color: rgba(34,197,94,0.4); color: var(--green); }
+        #toast.error { border-color: rgba(239,68,68,0.4); color: var(--red); }
+
+        /* ── EMPTY STATE ── */
+        .empty-state {
+            text-align: center; padding: 60px 20px;
+            font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-size: 11px;
+        }
+        .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
     </style>
 </head>
 <body>
 
+<!-- AUTH -->
 <div id="auth-screen">
-    <div style="font-size: 40px; margin-bottom: 10px;">🥩</div> <div class="auth-title">Мангал та Заготівельний</div>
-    <input type="password" id="auth-pin" inputmode="numeric" placeholder="••••" onkeydown="if(event.key==='Enter') checkAuth()">
-    <button class="ctrl-btn" style="width: 270px; padding: 18px;" onclick="checkAuth()">УВІЙТИ</button>
+    <div class="auth-logo">🥩</div>
+    <div class="auth-title">Мангал та Заготівельний</div>
+    <div class="auth-subtitle">Баранчик · Система обліку</div>
+    <input type="password" id="auth-pin" inputmode="numeric" placeholder="••••"
+           onkeydown="if(event.key==='Enter') checkAuth()" autocomplete="off">
+    <button class="auth-btn" onclick="checkAuth()">УВІЙТИ</button>
 </div>
 
-<div id="app-content" style="display: none;">
+<!-- APP -->
+<div id="app-content" style="display:none;">
     <header>
         <div class="header-inner">
             <div>
                 <div class="logo-mark">🔥 МАНГАЛ ТА ЗАГОТІВЕЛЬНИЙ</div>
-                <div id="date-label" style="font-family: 'JetBrains Mono'; font-size: 8px; color: var(--text-dim); margin-top: 4px; text-transform: uppercase;"></div>
+                <div class="header-meta">
+                    <div id="fb-status" title="Статус підключення"></div>
+                    <div id="date-label"></div>
+                    <div id="mode-badge"></div>
+                </div>
             </div>
-            <div style="display: flex; gap: 8px; align-items: center;">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <button class="hbtn theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
-                <button class="hbtn" style="background: rgba(0,136,204,0.1); color: #38bdf8;" onclick="shareToTelegram()">✈️ ВІДПРАВИТИ</button>
+                <button class="hbtn tg-btn" onclick="shareToTelegram()">✈️ ВІДПРАВИТИ</button>
                 <button class="hbtn" id="lockBtn" onclick="toggleLock()">🔒 НОРМИ</button>
             </div>
         </div>
@@ -140,16 +301,20 @@
     <main>
         <div class="controls-grid">
             <div class="control-card">
+                <div class="control-label">Додати товар</div>
                 <div class="control-row">
                     <select id="selCat"></select>
-                    <input type="text" id="inpName" placeholder="Назва товару...">
+                    <input type="text" id="inpName" placeholder="Назва товару..."
+                           onkeydown="if(event.key==='Enter') addItem()">
                     <button class="ctrl-btn" onclick="addItem()">+</button>
                 </div>
             </div>
             <div class="control-card">
+                <div class="control-label">Новий розділ</div>
                 <div class="control-row">
-                    <input type="text" id="inpCat" placeholder="НОВИЙ РОЗДІЛ...">
-                    <button class="ctrl-btn" style="background: var(--text-muted)" onclick="addCategory()">OK</button>
+                    <input type="text" id="inpCat" placeholder="Назва розділу..."
+                           onkeydown="if(event.key==='Enter') addCategory()">
+                    <button class="ctrl-btn" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim);" onclick="addCategory()">OK</button>
                 </div>
             </div>
         </div>
@@ -157,53 +322,92 @@
     </main>
 </div>
 
+<!-- MODAL -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-box">
-        <div style="font-weight: 800; margin-bottom: 20px;">🔐 ПАРОЛЬ АДМІНІСТРАТОРА</div>
-        <input type="password" id="passInput" style="width: 100%; background: var(--surface2); border: 1px solid var(--border); color: white; text-align: center; font-size: 24px; padding: 15px; border-radius: 15px; margin-bottom: 20px;" onkeydown="if(event.key==='Enter') checkPass()">
-        <div style="display: flex; gap: 10px;">
-            <button class="ctrl-btn" style="flex: 1;" onclick="checkPass()">ОК</button>
-            <button class="hbtn" style="flex: 1;" onclick="closePass()">Х</button>
+        <div class="modal-title">🔐 ПАРОЛЬ АДМІНІСТРАТОРА</div>
+        <input type="password" id="passInput" inputmode="numeric"
+               onkeydown="if(event.key==='Enter') checkPass(); if(event.key==='Escape') closePass()" autocomplete="off">
+        <div class="modal-btns">
+            <button class="ctrl-btn" style="flex:1;" onclick="checkPass()">ОК</button>
+            <button class="hbtn" style="flex:1;" onclick="closePass()">СКАСУВАТИ</button>
         </div>
     </div>
 </div>
 
-<script>
-    const PIN = "3196";
-    const DB_KEY = 'mangal'; 
-    const TG_TOKEN = "7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38"; 
-    const TG_CHAT_ID = "-1002336484919"; 
-    const TG_THREAD_ID = 15; 
+<!-- TOAST -->
+<div id="toast"></div>
 
+<script>
+    // ── CONFIG ──────────────────────────────────────────────────────────
+    const AUTH_PIN = "2024";   // PIN для входу
+    const PIN      = "3196";   // PIN для адміна (норми)
+    const DB_KEY   = 'mangal';
+    const TG_TOKEN    = "7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38";
+    const TG_CHAT_ID  = "-1002336484919";
+    const TG_THREAD_ID = 15;
+
+    // ── STATE ────────────────────────────────────────────────────────────
     let isUnlocked = false;
     let store = { categories: {}, items: {} };
+    const debounceMap = {};
 
-    // Експортуємо функції в глобальну область видимості
+    // ── THEME ────────────────────────────────────────────────────────────
     window.toggleTheme = () => {
         const isLight = document.body.classList.toggle('light');
         document.getElementById('themeBtn').textContent = isLight ? '☀️' : '🌙';
         localStorage.setItem('theme', isLight ? 'light' : 'dark');
     };
-
     if (localStorage.getItem('theme') === 'light') {
         document.body.classList.add('light');
-        document.addEventListener('DOMContentLoaded', () => document.getElementById('themeBtn').textContent = '☀️');
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('themeBtn').textContent = '☀️';
+        });
     }
 
+    // ── TOAST ────────────────────────────────────────────────────────────
+    let toastTimer;
+    window.showToast = (msg, type = '') => {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.className = 'show ' + type;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { el.className = ''; }, 2800);
+    };
+
+    // ── AUTH ─────────────────────────────────────────────────────────────
     window.checkAuth = () => {
-        if (document.getElementById('auth-pin').value === "2024") {
+        const input = document.getElementById('auth-pin');
+        if (input.value === AUTH_PIN) {
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
         } else {
-            alert("Невірний PIN");
+            input.classList.remove('shake');
+            void input.offsetWidth; // reflow для перезапуску анімації
+            input.classList.add('shake');
+            input.value = '';
+            input.focus();
         }
     };
 
-    // ПРАВКА ТУТ: тепер вихідний визначається для наступного дня
+    // ── DATE & MODE ──────────────────────────────────────────────────────
+    // Визначаємо вихідні для наступного дня (замовлення на завтра)
     window.getIsWeekend = () => [0, 5, 6].includes((new Date().getDay() + 1) % 7);
 
+    function renderDateMode() {
+        document.getElementById('date-label').textContent =
+            new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+        const isWe = window.getIsWeekend();
+        const badge = document.getElementById('mode-badge');
+        badge.className = 'mode-badge ' + (isWe ? 'weekend' : 'weekday');
+        badge.textContent = isWe ? 'ВИХІДНІ' : 'БУДНІ';
+    }
+
+    // ── FIREBASE ─────────────────────────────────────────────────────────
     window.addEventListener('firebase-ready', () => {
-        document.getElementById('date-label').textContent = new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
+        renderDateMode();
+        document.getElementById('fb-status').classList.add('online');
+
         window.fOnValue(window.fRef(window.db, DB_KEY), snap => {
             const val = snap.val() || {};
             store.categories = val.categories || {};
@@ -213,117 +417,224 @@
         });
     });
 
+    // ── RENDER ───────────────────────────────────────────────────────────
     function render() {
         const container = document.getElementById('checklist-container');
         const isWe = window.getIsWeekend();
-        const catIds = Object.keys(store.categories).sort((a, b) => store.categories[a].name.localeCompare(store.categories[b].name));
-        
-        container.innerHTML = catIds.map(catId => {
-            const items = Object.keys(store.items).filter(id => store.items[id].catId === catId).sort((a, b) => store.items[a].name.localeCompare(store.items[b].name));
+        const catIds = Object.keys(store.categories)
+            .sort((a, b) => store.categories[a].name.localeCompare(store.categories[b].name, 'uk'));
+
+        if (catIds.length === 0) {
+            container.innerHTML = `<div class="empty-state"><div class="emoji">📦</div>Немає розділів. Додайте перший розділ вище.</div>`;
+            return;
+        }
+
+        container.innerHTML = catIds.map((catId, ci) => {
+            const items = Object.keys(store.items)
+                .filter(id => store.items[id].catId === catId)
+                .sort((a, b) => store.items[a].name.localeCompare(store.items[b].name, 'uk'));
+
             const rows = items.map(itemId => {
                 const i = store.items[itemId];
                 const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
-                const norm = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
+                const norm  = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
                 const order = Math.max(0, norm - total);
+                const delBtn = isUnlocked
+                    ? `<span class="del-btn" onclick="deleteItem('${itemId}')" title="Видалити">✕</span>` : '';
 
                 return `<tr>
-                    <td><div class="item-name">${isUnlocked ? `<span onclick="deleteItem('${itemId}')" style="color:red;margin-right:12px;cursor:pointer;font-weight:800;">✕</span>` : ''}${i.name}</div></td>
-                    <td><input type="number" step="0.1" value="${i.s_m || ''}" onchange="upd('${itemId}','s_m',this.value)" class="inp-stock"></td>
-                    <td><input type="number" step="0.1" value="${i.s_z || ''}" onchange="upd('${itemId}','s_z',this.value)" class="inp-stock" style="background:rgba(255,255,255,0.03)"></td>
-                    <td><input type="number" step="0.1" value="${i.wd || ''}" ${!isUnlocked?'readonly':''} onchange="upd('${itemId}','wd',this.value)" class="${isUnlocked?'inp-norm':'inp-norm inp-readonly'}"></td>
-                    <td><input type="number" step="0.1" value="${i.we || ''}" ${!isUnlocked?'readonly':''} onchange="upd('${itemId}','we',this.value)" class="${isUnlocked?'inp-norm':'inp-norm inp-readonly'}"></td>
-                    <td>${order > 0 ? `<span class="need-badge">${order.toFixed(1)}</span>` : `<div class="done-mark">✓</div>`}</td>
+                    <td><div class="item-name">${delBtn}${escHtml(i.name)}</div></td>
+                    <td><input type="number" min="0" step="0.1" value="${i.s_m || ''}"
+                         onchange="updDebounce('${itemId}','s_m',this.value)"
+                         class="inp-stock" placeholder="0"></td>
+                    <td><input type="number" min="0" step="0.1" value="${i.s_z || ''}"
+                         onchange="updDebounce('${itemId}','s_z',this.value)"
+                         class="inp-stock inp-stock-z" placeholder="0"></td>
+                    <td><input type="number" min="0" step="0.1" value="${i.wd || ''}"
+                         ${!isUnlocked ? 'readonly' : ''}
+                         onchange="updDebounce('${itemId}','wd',this.value)"
+                         class="inp-norm${isUnlocked ? '' : ' inp-readonly'}" placeholder="0"></td>
+                    <td><input type="number" min="0" step="0.1" value="${i.we || ''}"
+                         ${!isUnlocked ? 'readonly' : ''}
+                         onchange="updDebounce('${itemId}','we',this.value)"
+                         class="inp-norm${isUnlocked ? '' : ' inp-readonly'}" placeholder="0"></td>
+                    <td>${order > 0
+                        ? `<span class="need-badge">${order.toFixed(1)}</span>`
+                        : `<div class="done-mark">✓</div>`}
+                    </td>
                 </tr>`;
             }).join('');
 
-            return `<div class="category-block">
-                <div class="cat-header"><span class="cat-title">${store.categories[catId].name}</span>${isUnlocked ? `<span onclick="deleteCat('${catId}')" style="color:red;font-size:9px;cursor:pointer;font-weight:700;">ВИДАЛИТИ РОЗДІЛ</span>` : ''}</div>
+            const emptyMsg = items.length === 0
+                ? `<tr><td colspan="6" style="padding:20px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);">— порожній розділ —</td></tr>` : '';
+
+            const delCatBtn = isUnlocked
+                ? `<span class="cat-del-btn" onclick="deleteCat('${catId}')">Видалити розділ</span>` : '';
+
+            return `<div class="category-block" style="animation-delay:${ci * 0.05}s">
+                <div class="cat-header">
+                    <span class="cat-title">${escHtml(store.categories[catId].name)}</span>
+                    ${delCatBtn}
+                </div>
                 <div class="table-wrap"><table>
-                    <thead><tr><th>ТОВАР</th><th>МАНГАЛ</th><th>ЗАГОТ.</th><th>БД</th><th>ВХ</th><th>ТРЕБА</th></tr></thead>
-                    <tbody>${rows}</tbody>
+                    <thead><tr>
+                        <th>ТОВАР</th><th>МАНГАЛ</th><th>ЗАГОТ.</th><th>БД</th><th>ВХ</th><th>ТРЕБА</th>
+                    </tr></thead>
+                    <tbody>${rows}${emptyMsg}</tbody>
                 </table></div>
             </div>`;
         }).join('');
     }
 
-    window.upd = (id, f, v) => window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/${f}`), v);
-    
+    // Escape HTML щоб уникнути XSS при введенні назв
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── UPDATE з дебаунсом ───────────────────────────────────────────────
+    window.updDebounce = (id, field, value) => {
+        const key = id + field;
+        clearTimeout(debounceMap[key]);
+        debounceMap[key] = setTimeout(() => {
+            const num = Math.max(0, parseFloat(value) || 0);
+            window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/${field}`), num || '');
+        }, 600);
+    };
+
+    // ── ADD ITEM ─────────────────────────────────────────────────────────
     window.addItem = () => {
-        const name = document.getElementById('inpName').value;
-        const catId = document.getElementById('selCat').value;
-        if (name && catId) {
-            window.fPush(window.fRef(window.db, `${DB_KEY}/items`), { name, catId, s_m: '', s_z: '', wd: 0, we: 0 });
-            document.getElementById('inpName').value = '';
+        const nameEl = document.getElementById('inpName');
+        const catId  = document.getElementById('selCat').value;
+        const name   = nameEl.value.trim();
+        if (!name) { nameEl.focus(); return; }
+        if (!catId) { showToast('⚠️ Спочатку оберіть розділ', 'error'); return; }
+        window.fPush(window.fRef(window.db, `${DB_KEY}/items`),
+            { name, catId, s_m: '', s_z: '', wd: 0, we: 0 });
+        nameEl.value = '';
+        nameEl.focus();
+        showToast('✅ Товар додано', 'success');
+    };
+
+    // ── ADD CATEGORY ─────────────────────────────────────────────────────
+    window.addCategory = () => {
+        const el = document.getElementById('inpCat');
+        const name = el.value.trim().toUpperCase();
+        if (!name) { el.focus(); return; }
+        window.fPush(window.fRef(window.db, `${DB_KEY}/categories`), { name });
+        el.value = '';
+        el.focus();
+        showToast('✅ Розділ додано', 'success');
+    };
+
+    // ── SELECT UPDATE ─────────────────────────────────────────────────────
+    function updateSelect() {
+        const sel = document.getElementById('selCat');
+        if (!sel) return;
+        const prev = sel.value;
+        sel.innerHTML = Object.keys(store.categories)
+            .sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name, 'uk'))
+            .map(id => `<option value="${id}">${escHtml(store.categories[id].name)}</option>`)
+            .join('');
+        if (prev && sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
+    }
+
+    // ── LOCK / UNLOCK ─────────────────────────────────────────────────────
+    window.toggleLock = () => {
+        if (isUnlocked) {
+            isUnlocked = false;
+            render();
+            document.getElementById('lockBtn').innerHTML = "🔒 НОРМИ";
+            showToast('🔒 Заблоковано');
+        } else {
+            document.getElementById('passwordModal').style.display = 'flex';
+            setTimeout(() => document.getElementById('passInput').focus(), 50);
         }
     };
 
-    window.addCategory = () => {
-        const name = document.getElementById('inpCat').value.toUpperCase();
-        if (name) { window.fPush(window.fRef(window.db, `${DB_KEY}/categories`), { name }); document.getElementById('inpCat').value = ''; }
-    };
-
-    function updateSelect() {
-        const sel = document.getElementById('selCat');
-        if (sel) sel.innerHTML = Object.keys(store.categories).sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name))
-            .map(id => `<option value="${id}">${store.categories[id].name}</option>`).join('');
-    }
-
-    window.toggleLock = () => {
-        if (isUnlocked) { isUnlocked = false; render(); document.getElementById('lockBtn').innerHTML = "🔒 НОРМИ"; }
-        else { document.getElementById('passwordModal').style.display = 'flex'; document.getElementById('passInput').focus(); }
-    };
-
     window.checkPass = () => {
-        if (document.getElementById('passInput').value === PIN) { isUnlocked = true; closePass(); render(); document.getElementById('lockBtn').innerHTML = "🔓 БЛОКУВАТИ"; }
-        else alert('Невірний пароль');
+        if (document.getElementById('passInput').value === PIN) {
+            isUnlocked = true;
+            closePass();
+            render();
+            document.getElementById('lockBtn').innerHTML = "🔓 БЛОКУВАТИ";
+            showToast('🔓 Режим адміна увімкнено', 'success');
+        } else {
+            const el = document.getElementById('passInput');
+            el.style.borderColor = 'var(--red)';
+            setTimeout(() => el.style.borderColor = '', 1000);
+            el.value = '';
+            el.focus();
+            showToast('❌ Невірний пароль', 'error');
+        }
     };
 
-    window.closePass = () => { document.getElementById('passwordModal').style.display = 'none'; document.getElementById('passInput').value = ''; };
+    window.closePass = () => {
+        document.getElementById('passwordModal').style.display = 'none';
+        document.getElementById('passInput').value = '';
+    };
+    // Закрити модал по кліку на фон
+    document.getElementById('passwordModal').addEventListener('click', e => {
+        if (e.target === e.currentTarget) closePass();
+    });
 
+    // ── DELETE ────────────────────────────────────────────────────────────
     window.deleteItem = (id) => {
-        if (confirm('Видалити цей товар?')) {
+        if (confirm(`Видалити "${store.items[id]?.name}"?`)) {
             window.fRemove(window.fRef(window.db, `${DB_KEY}/items/${id}`));
+            showToast('🗑️ Товар видалено');
         }
     };
 
     window.deleteCat = (id) => {
-        if (confirm('Видалити весь розділ та всі товари в ньому?')) {
+        const name = store.categories[id]?.name || 'розділ';
+        if (confirm(`Видалити розділ "${name}" та всі товари в ньому?`)) {
             window.fRemove(window.fRef(window.db, `${DB_KEY}/categories/${id}`));
             Object.keys(store.items).forEach(iid => {
-                if (store.items[iid].catId === id) window.fRemove(window.fRef(window.db, `${DB_KEY}/items/${iid}`));
+                if (store.items[iid].catId === id)
+                    window.fRemove(window.fRef(window.db, `${DB_KEY}/items/${iid}`));
             });
+            showToast('🗑️ Розділ видалено');
         }
     };
 
+    // ── TELEGRAM ──────────────────────────────────────────────────────────
     window.shareToTelegram = async () => {
-        let message = "🔥 *ЗАМОВЛЕННЯ: МАНГАЛ ТА ЗАГОТІВЕЛЬНИЙ*\n";
         const isWe = window.getIsWeekend();
-        message += `📅 Дата: ${new Date().toLocaleDateString('uk-UA')}\n📊 Режим: *${isWe ? "ВИХІДНІ" : "БУДНІ"}*\n\n`;
+        let message = `🔥 *ЗАМОВЛЕННЯ: МАНГАЛ ТА ЗАГОТІВЕЛЬНИЙ*\n`;
+        message += `📅 Дата: ${new Date().toLocaleDateString('uk-UA')}\n`;
+        message += `📊 Режим: *${isWe ? 'ВИХІДНІ' : 'БУДНІ'}*\n\n`;
         let hasOrder = false;
-        
-        Object.keys(store.categories).sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name)).forEach(cid => {
-            let catPart = `*${store.categories[cid].name}:*\n`;
-            let itemsFound = false;
-            Object.keys(store.items).filter(id => store.items[id].catId === cid).forEach(iid => {
-                const i = store.items[iid];
-                const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
-                const norm = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
-                const order = Math.max(0, norm - total);
-                if (order > 0) { catPart += `• ${i.name}: *${order.toFixed(1)}*\n`; itemsFound = true; hasOrder = true; }
-            });
-            if (itemsFound) message += catPart + "\n";
-        });
 
-        if (!hasOrder) return alert("Все в нормі!");
+        Object.keys(store.categories)
+            .sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name, 'uk'))
+            .forEach(cid => {
+                let catPart = `*${store.categories[cid].name}:*\n`;
+                let itemsFound = false;
+                Object.keys(store.items)
+                    .filter(id => store.items[id].catId === cid)
+                    .forEach(iid => {
+                        const i = store.items[iid];
+                        const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
+                        const norm  = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
+                        const order = Math.max(0, norm - total);
+                        if (order > 0) { catPart += `• ${i.name}: *${order.toFixed(1)}*\n`; itemsFound = true; hasOrder = true; }
+                    });
+                if (itemsFound) message += catPart + '\n';
+            });
+
+        if (!hasOrder) { showToast('✅ Все в нормі — замовляти нічого', 'success'); return; }
 
         try {
-            await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+            const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: TG_CHAT_ID, message_thread_id: TG_THREAD_ID, text: message, parse_mode: 'Markdown' })
             });
-            alert("✅ Відправлено!");
-        } catch(e) { alert("❌ Помилка"); }
+            if (res.ok) showToast('✅ Відправлено в Telegram', 'success');
+            else throw new Error();
+        } catch { showToast('❌ Помилка відправки', 'error'); }
     };
 </script>
 </body>
