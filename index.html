@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Мангал та Заготівельний - Баранчик</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
+    
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getDatabase, ref, set, onValue, push, remove } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -23,275 +22,118 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         window.db = db;
-        window.fRef = ref;
-        window.fSet = set;
-        window.fOnValue = onValue;
-        window.fPush = push;
-        window.fRemove = remove;
+        window.fRef = ref; window.fSet = set; window.fOnValue = onValue; window.fPush = push; window.fRemove = remove;
         window.dispatchEvent(new Event('firebase-ready'));
     </script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --bg: #0a0a0f;
-            --surface: #111118;
-            --surface2: #18181f;
-            --border: #252530;
-            --accent: #f97316;
-            --text: #e8e8f0;
-            --text-dim: #5a5a70;
-            --text-muted: #35354a;
-            --green: #22c55e;
-            --red: #ef4444;
-            --header-bg: rgba(10,10,15,0.9);
-            --shadow: rgba(0,0,0,0.4);
+            --bg: #0a0a0f; --surface: #111118; --surface2: #18181f; --border: #252530;
+            --accent: #f97316; --text: #e8e8f0; --text-dim: #5a5a70; --text-muted: #35354a;
+            --green: #22c55e; --red: #ef4444; --header-bg: rgba(10,10,15,0.9);
         }
 
-        body.light {
-            --bg: #f1f5f9;
-            --surface: #ffffff;
-            --surface2: #f8fafc;
-            --border: #e2e8f0;
-            --accent: #ea580c;
-            --text: #0f172a;
-            --text-dim: #64748b;
-            --text-muted: #94a3b8;
-            --header-bg: rgba(255,255,255,0.92);
-            --shadow: rgba(0,0,0,0.1);
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); overflow-x: hidden; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Syne', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+        /* ── ЕКРАН ВХОДУ ── */
+        #auth-screen { position: fixed; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; gap: 20px; }
+        .pin-display { display: flex; gap: 15px; margin: 10px 0; }
+        .pin-dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--border); transition: 0.2s; }
+        .pin-dot.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 15px var(--accent); }
+        input[type="tel"]#hidden-auth-input, input[type="tel"]#hidden-admin-input { position: absolute; opacity: 0; pointer-events: none; }
 
-        /* ── AUTH ── */
-        #auth-screen {
-            position: fixed; inset: 0; background: var(--bg);
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 9999; gap: 16px;
-        }
-        .auth-logo { font-size: 52px; animation: pulse 2s ease-in-out infinite; }
-        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.08)} }
-        .auth-title { font-size: 18px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; text-align: center; opacity: 0.9; }
-        .auth-subtitle { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.15em; }
-        #auth-pin {
-            width: 270px; background: var(--surface); border: 1.5px solid var(--border);
-            color: var(--text); text-align: center; font-family: 'JetBrains Mono', monospace;
-            font-size: 32px; padding: 20px; border-radius: 20px; outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        #auth-pin:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(249,115,22,0.15); }
-        #auth-pin.shake { animation: shake 0.4s; }
-        @keyframes shake { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-8px)} 40%,80%{transform:translateX(8px)} }
-        .auth-btn {
-            width: 270px; padding: 18px; background: var(--accent); color: white;
-            font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px;
-            letter-spacing: 0.1em; border: none; border-radius: 16px; cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s;
-        }
-        .auth-btn:hover { opacity: 0.9; }
-        .auth-btn:active { transform: scale(0.98); }
+        /* ── ШАПКА ── */
+        header { background: var(--header-bg); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); padding: 12px 16px; position: sticky; top: 0; z-index: 40; }
+        .header-inner { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .logo-mark { font-weight: 800; font-size: 14px; letter-spacing: 1px; }
 
-        /* ── HEADER ── */
-        header {
-            background: var(--header-bg); backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border); padding: 14px 20px;
-            position: sticky; top: 0; z-index: 40;
-        }
-        .header-inner { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
-        .logo-mark { font-size: 15px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; font-style: italic; }
-        .header-meta { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
-        #date-label { font-family: 'JetBrains Mono'; font-size: 8px; color: var(--text-dim); text-transform: uppercase; }
-        /* Firebase status dot */
-        #fb-status { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); transition: background 0.3s; flex-shrink: 0; }
-        #fb-status.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+        /* ── АДМІН ПАНЕЛЬ ── */
+        .admin-panel { background: var(--surface); border: 1px solid var(--accent); border-radius: 20px; padding: 16px; margin-bottom: 20px; display: none; }
+        .admin-title { font-size: 10px; font-weight: 800; color: var(--accent); text-transform: uppercase; margin-bottom: 8px; font-family: 'JetBrains Mono'; }
+        .admin-row { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .admin-panel input, .admin-panel select { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 10px; border-radius: 10px; flex: 1; outline: none; }
 
-        /* ── MAIN ── */
-        main { max-width: 1000px; margin: 0 auto; padding: 20px 16px; }
+        /* ── ТАБЛИЦІ ── */
+        main { max-width: 1000px; margin: 0 auto; padding: 16px; }
+        .category-block { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; margin-bottom: 16px; }
+        .cat-header { padding: 12px 16px; background: var(--surface2); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .cat-title { font-family: 'JetBrains Mono'; font-size: 11px; color: var(--accent); text-transform: uppercase; font-weight: 700; }
+        
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; /* 🔥 Фіксована ширина стовпчиків */ }
+        
+        /* 🔥 ВИРІВНЮВАННЯ СТОВПЧИКІВ 🔥 */
+        th:nth-child(1), td:nth-child(1) { width: 35%; text-align: left; padding-left: 10px; } /* Товар */
+        th:nth-child(2), td:nth-child(2) { width: 15%; } /* Манг */
+        th:nth-child(3), td:nth-child(3) { width: 15%; } /* Загот */
+        th:nth-child(4), td:nth-child(4) { width: 10%; } /* БД */
+        th:nth-child(5), td:nth-child(5) { width: 10%; } /* ВХ */
+        th:nth-child(6), td:nth-child(6) { width: 15%; padding-right: 10px; } /* Треба */
 
-        /* Weekend badge */
-        .mode-badge {
-            font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
-            padding: 4px 10px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.05em;
-        }
-        .mode-badge.weekend { background: rgba(249,115,22,0.15); color: var(--accent); border: 1px solid rgba(249,115,22,0.3); }
-        .mode-badge.weekday { background: rgba(34,197,94,0.1); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+        th { font-family: 'JetBrains Mono'; font-size: 8px; color: var(--text-muted); padding: 10px 4px; text-transform: uppercase; text-align: center; }
+        td { padding: 8px 2px; border-bottom: 1px solid rgba(255,255,255,0.03); text-align: center; }
 
-        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }
-        @media (max-width: 650px) { .controls-grid { grid-template-columns: 1fr; } }
+        /* Динамічне приховування норм */
+        .hide-norms .col-norm { display: none; }
+        
+        /* 🔥 ВИРІВНЮВАННЯ ШИРИНИ ТАБЛИЦІ В АДМІН РЕЖИМІ 🔥 */
+        .admin-view th:nth-child(1), .admin-view td:nth-child(1) { width: 30%; } /* Товар */
+        .admin-view th:nth-child(2), .admin-view td:nth-child(2) { width: 12%; } /* Манг */
+        .admin-view th:nth-child(3), .admin-view td:nth-child(3) { width: 12%; } /* Загот */
+        .admin-view th:nth-child(4), .admin-view td:nth-child(4) { width: 12%; } /* БД */
+        .admin-view th:nth-child(5), .admin-view td:nth-child(5) { width: 12%; } /* ВХ */
+        .admin-view th:nth-child(6), .admin-view td:nth-child(6) { width: 12%; } /* Треба */
 
-        .control-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 14px; }
-        .control-label { font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-        .control-row { display: flex; gap: 8px; }
-        select, input[type="text"] {
-            background: var(--surface2); border: 1px solid var(--border); color: var(--text);
-            font-family: 'Syne', sans-serif; font-size: 12px; padding: 10px 12px;
-            border-radius: 12px; outline: none; flex: 1;
-            transition: border-color 0.2s;
-        }
-        select:focus, input[type="text"]:focus { border-color: var(--accent); }
-
-        .ctrl-btn {
-            background: var(--accent); color: white; font-weight: 800; font-size: 16px;
-            padding: 10px 18px; border-radius: 12px; border: none; cursor: pointer;
-            transition: opacity 0.2s, transform 0.1s; flex-shrink: 0;
-        }
-        .ctrl-btn:hover { opacity: 0.88; }
-        .ctrl-btn:active { transform: scale(0.95); }
-
-        /* ── CATEGORY TABLE ── */
-        .category-block {
-            background: var(--surface); border: 1px solid var(--border);
-            border-radius: 22px; overflow: hidden; margin-bottom: 20px;
-            animation: fadeUp 0.3s ease both;
-        }
-        @keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-
-        .cat-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: var(--surface2); border-bottom: 1px solid var(--border); }
-        .cat-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; }
-
-        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-        table { width: 100%; border-collapse: collapse; min-width: 680px; table-layout: fixed; }
-        th {
-            font-family: 'JetBrains Mono', monospace; font-size: 8px; color: var(--text-muted);
-            padding: 10px 5px; text-transform: uppercase; text-align: center; letter-spacing: 0.07em;
-        }
-        th:nth-child(1), td:nth-child(1) { width: 26%; text-align: left; padding-left: 20px; }
-        th:nth-child(2), td:nth-child(2) { width: 13%; }
-        th:nth-child(3), td:nth-child(3) { width: 13%; }
-        th:nth-child(4), td:nth-child(4) { width: 11%; }
-        th:nth-child(5), td:nth-child(5) { width: 11%; }
-        th:nth-child(6), td:nth-child(6) { width: 16%; }
-
-        td { padding: 7px 5px; vertical-align: middle; border-bottom: 1px solid rgba(255,255,255,0.03); transition: background 0.15s; }
-        body.light td { border-bottom-color: rgba(0,0,0,0.04); }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: rgba(249,115,22,0.03); }
-
-        .item-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
-        .del-btn { color: var(--red); cursor: pointer; font-weight: 800; font-size: 12px; opacity: 0.6; transition: opacity 0.15s; flex-shrink: 0; line-height: 1; }
-        .del-btn:hover { opacity: 1; }
-
+        /* Поля введення */
         input[type="number"] {
-            width: 100%; padding: 9px 4px; text-align: center;
-            border-radius: 10px; font-family: 'JetBrains Mono', monospace;
-            font-size: 13px; font-weight: 700; border: 1px solid transparent;
-            outline: none; transition: border-color 0.2s, box-shadow 0.2s;
-            -moz-appearance: textfield;
+            width: 100%; padding: 10px 2px; text-align: center; border-radius: 10px; border: 1px solid transparent;
+            background: rgba(249,115,22,0.06); color: var(--accent); font-family: 'JetBrains Mono'; font-weight: 700; outline: none;
+            max-width: 60px; /* 🔥 Обмеження максимальної ширини полів ввода */
+            margin: 0 auto;
+            display: block;
         }
-        input[type="number"]::-webkit-inner-spin-button,
-        input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
-        .inp-stock { background: rgba(249,115,22,0.08); border-color: rgba(249,115,22,0.2); color: var(--accent); }
-        .inp-stock:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(249,115,22,0.15); }
-        .inp-stock-z { background: rgba(255,255,255,0.03); border-color: rgba(249,115,22,0.1); color: var(--accent); }
-        body.light .inp-stock-z { background: rgba(249,115,22,0.04); }
-        .inp-norm { background: var(--surface2); border-color: var(--border); color: var(--text-dim); }
-        .inp-norm:focus { border-color: var(--text-dim); }
-        .inp-readonly { opacity: 0.3; pointer-events: none; }
+        .inp-norm { background: var(--surface2) !important; color: var(--text-dim) !important; }
 
-        .need-badge {
-            background: rgba(239,68,68,0.12); color: var(--red);
-            padding: 8px 6px; border-radius: 10px;
-            font-family: 'JetBrains Mono', monospace; font-weight: 800; font-size: 13px;
-            display: block; text-align: center; border: 1px solid rgba(239,68,68,0.2);
-        }
-        .done-mark { color: var(--green); opacity: 0.25; font-size: 14px; text-align: center; }
+        /* 🔥 ПРИХОВУЄМО СТРІЛОЧКИ (СПІНЕРИ) 🔥 */
+        input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
 
-        /* ── HEADER BUTTONS ── */
-        .hbtn {
-            font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700;
-            padding: 8px 14px; border-radius: 12px; border: 1px solid var(--border);
-            cursor: pointer; background: var(--surface2); color: var(--text-dim);
-            transition: background 0.2s, color 0.2s, transform 0.1s;
-            white-space: nowrap;
-        }
-        .hbtn:hover { background: var(--border); }
+        /* Кнопки */
+        .hbtn { font-family: 'JetBrains Mono'; font-size: 9px; font-weight: 700; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-dim); cursor: pointer; transition: 0.2s; }
         .hbtn:active { transform: scale(0.95); }
-        .theme-btn { font-size: 14px; padding: 8px 12px; }
         .tg-btn { background: rgba(0,136,204,0.1); color: #38bdf8; border-color: rgba(56,189,248,0.2); }
-        .tg-btn:hover { background: rgba(0,136,204,0.2); }
+        .del-btn { background: transparent; border: none; color: var(--red); cursor: pointer; font-size: 14px; margin-right: 5px; vertical-align: middle; }
 
-        /* ── DELETE CAT BUTTON ── */
-        .cat-del-btn {
-            font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 700;
-            color: var(--red); opacity: 0.5; cursor: pointer; padding: 4px 8px;
-            border-radius: 8px; border: 1px solid transparent; transition: all 0.15s;
-            text-transform: uppercase;
-        }
-        .cat-del-btn:hover { opacity: 1; border-color: rgba(239,68,68,0.3); background: rgba(239,68,68,0.08); }
+        .need-badge { background: rgba(239,68,68,0.12); color: var(--red); padding: 8px; border-radius: 10px; font-family: 'JetBrains Mono'; font-weight: 800; display: block; max-width: 60px; margin: 0 auto; text-align: center; }
+        .done-mark { color: var(--green); opacity: 0.3; font-size: 14px; text-align: center; }
 
-        /* ── MODAL ── */
-        .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.75);
-            display: none; align-items: center; justify-content: center;
-            z-index: 500; backdrop-filter: blur(10px);
-        }
-        .modal-box {
-            background: var(--surface); padding: 28px; border-radius: 28px;
-            text-align: center; width: 300px; border: 1px solid var(--border);
-            animation: popIn 0.2s ease;
-        }
-        @keyframes popIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
-        .modal-title { font-weight: 800; margin-bottom: 18px; font-size: 14px; }
-        #passInput {
-            width: 100%; background: var(--surface2); border: 1.5px solid var(--border);
-            color: var(--text); text-align: center; font-family: 'JetBrains Mono', monospace;
-            font-size: 24px; padding: 14px; border-radius: 14px; margin-bottom: 18px; outline: none;
-            transition: border-color 0.2s;
-        }
-        #passInput:focus { border-color: var(--accent); }
-        .modal-btns { display: flex; gap: 10px; }
-
-        /* ── TOAST ── */
-        #toast {
-            position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-            background: var(--surface); border: 1px solid var(--border); color: var(--text);
-            font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700;
-            padding: 12px 22px; border-radius: 50px; z-index: 9000;
-            box-shadow: 0 8px 32px var(--shadow);
-            transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s;
-            opacity: 0; pointer-events: none; white-space: nowrap;
-        }
+        /* Модальне вікно адміна */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 500; backdrop-filter: blur(8px); }
+        .modal-box { background: var(--surface); padding: 30px; border-radius: 24px; text-align: center; border: 1px solid var(--border); width: 280px; }
+        
+        #toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #1e1e2a; border: 1px solid var(--accent); padding: 12px 24px; border-radius: 50px; transition: 0.3s; opacity: 0; z-index: 9999; font-size: 12px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         #toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-        #toast.success { border-color: rgba(34,197,94,0.4); color: var(--green); }
-        #toast.error { border-color: rgba(239,68,68,0.4); color: var(--red); }
-
-        /* ── EMPTY STATE ── */
-        .empty-state {
-            text-align: center; padding: 60px 20px;
-            font-family: 'JetBrains Mono', monospace; color: var(--text-muted); font-size: 11px;
-        }
-        .empty-state .emoji { font-size: 40px; margin-bottom: 12px; }
     </style>
 </head>
-<body>
+<body onclick="focusPinInput()">
 
-<!-- AUTH -->
 <div id="auth-screen">
-    <div class="auth-logo">🥩</div>
-    <div class="auth-title">Мангал та Заготівельний</div>
-    <div class="auth-subtitle">Баранчик · Система обліку</div>
-    <input type="password" id="auth-pin" inputmode="numeric" placeholder="••••"
-           onkeydown="if(event.key==='Enter') checkAuth()" autocomplete="off">
-    <button class="auth-btn" onclick="checkAuth()">УВІЙТИ</button>
+    <div style="font-size: 48px;">🥩</div>
+    <div style="font-weight: 800; letter-spacing: 3px; font-size: 14px;">ВХІД У СИСТЕМУ</div>
+    <div class="pin-display" id="auth-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <input type="tel" id="hidden-auth-input" maxlength="4" autocomplete="off">
 </div>
 
-<!-- APP -->
 <div id="app-content" style="display:none;">
     <header>
         <div class="header-inner">
-            <div>
-                <div class="logo-mark">🔥 МАНГАЛ ТА ЗАГОТІВЕЛЬНИЙ</div>
-                <div class="header-meta">
-                    <div id="fb-status" title="Статус підключення"></div>
-                    <div id="date-label"></div>
-                    <div id="mode-badge"></div>
-                </div>
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <button class="hbtn theme-btn" onclick="toggleTheme()" id="themeBtn">🌙</button>
+            <div class="logo-mark">🔥🥩</div>
+            <div style="display:flex; gap:8px;">
+                <button class="hbtn" style="color:var(--red)" onclick="clearAll()">🧹 ОЧИСТИТИ</button>
                 <button class="hbtn tg-btn" onclick="shareToTelegram()">✈️ ВІДПРАВИТИ</button>
                 <button class="hbtn" id="lockBtn" onclick="toggleLock()">🔒 НОРМИ</button>
             </div>
@@ -299,342 +141,236 @@
     </header>
 
     <main>
-        <div class="controls-grid">
-            <div class="control-card">
-                <div class="control-label">Додати товар</div>
-                <div class="control-row">
-                    <select id="selCat"></select>
-                    <input type="text" id="inpName" placeholder="Назва товару..."
-                           onkeydown="if(event.key==='Enter') addItem()">
-                    <button class="ctrl-btn" onclick="addItem()">+</button>
-                </div>
+        <div class="admin-panel" id="adminTools">
+            <div class="admin-title">Додати товар</div>
+            <div class="admin-row">
+                <select id="new-item-cat"></select>
+                <input type="text" id="new-item-name" placeholder="Назва...">
+                <button class="hbtn" style="background:var(--accent); color:white;" onclick="addItem()">+</button>
             </div>
-            <div class="control-card">
-                <div class="control-label">Новий розділ</div>
-                <div class="control-row">
-                    <input type="text" id="inpCat" placeholder="Назва розділу..."
-                           onkeydown="if(event.key==='Enter') addCategory()">
-                    <button class="ctrl-btn" style="background: var(--surface2); border: 1px solid var(--border); color: var(--text-dim);" onclick="addCategory()">OK</button>
-                </div>
+            <div class="admin-title">Додати папку</div>
+            <div class="admin-row">
+                <input type="text" id="new-cat-name" placeholder="Назва категорії...">
+                <button class="hbtn" style="background:var(--accent); color:white;" onclick="addCategory()">+</button>
             </div>
         </div>
         <div id="checklist-container"></div>
     </main>
 </div>
 
-<!-- MODAL -->
-<div class="modal-overlay" id="passwordModal">
+<div class="modal-overlay" id="adminModal">
     <div class="modal-box">
-        <div class="modal-title">🔐 ПАРОЛЬ АДМІНІСТРАТОРА</div>
-        <input type="password" id="passInput" inputmode="numeric"
-               onkeydown="if(event.key==='Enter') checkPass(); if(event.key==='Escape') closePass()" autocomplete="off">
-        <div class="modal-btns">
-            <button class="ctrl-btn" style="flex:1;" onclick="checkPass()">ОК</button>
-            <button class="hbtn" style="flex:1;" onclick="closePass()">СКАСУВАТИ</button>
+        <div style="margin-bottom: 15px; font-weight: 800; font-size: 12px; color: var(--accent);">🔐 АДМІНІСТРАТОР</div>
+        <div class="pin-display" id="admin-dots" style="justify-content: center;">
+            <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
         </div>
+        <input type="tel" id="hidden-admin-input" maxlength="4" autocomplete="off">
+        <button class="hbtn" style="margin-top:20px; width:100%" onclick="closeAdmin()">СКАСУВАТИ</button>
     </div>
 </div>
 
-<!-- TOAST -->
 <div id="toast"></div>
 
 <script>
-    // ── CONFIG ──────────────────────────────────────────────────────────
-    const AUTH_PIN = "2024";   // PIN для входу
-    const PIN      = "3196";   // PIN для адміна (норми)
-    const DB_KEY   = 'mangal';
-    const TG_TOKEN    = "7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38";
-    const TG_CHAT_ID  = "-1002336484919";
-    const TG_THREAD_ID = 15;
-
-    // ── STATE ────────────────────────────────────────────────────────────
+    const PIN_USER = "2024";
+    const PIN_ADMIN = "3196";
+    const DB_PATH = 'mangal';
+    
     let isUnlocked = false;
     let store = { categories: {}, items: {} };
-    const debounceMap = {};
 
-    // ── THEME ────────────────────────────────────────────────────────────
-    window.toggleTheme = () => {
-        const isLight = document.body.classList.toggle('light');
-        document.getElementById('themeBtn').textContent = isLight ? '☀️' : '🌙';
-        localStorage.setItem('theme', isLight ? 'light' : 'dark');
-    };
-    if (localStorage.getItem('theme') === 'light') {
-        document.body.classList.add('light');
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('themeBtn').textContent = '☀️';
+    // --- ПАРОЛІ ТА ФОКУС ---
+    function focusPinInput() {
+        const authDisp = document.getElementById('auth-screen').style.display;
+        const adminDisp = document.getElementById('adminModal').style.display;
+        if (authDisp !== 'none') document.getElementById('hidden-auth-input').focus();
+        else if (adminDisp === 'flex') document.getElementById('hidden-admin-input').focus();
+    }
+
+    function setupPinInput(type, correctPin, callback) {
+        const input = document.getElementById(`hidden-${type}-input`);
+        const dots = document.querySelectorAll(`#${type}-dots .pin-dot`);
+        
+        input.addEventListener('input', () => {
+            const val = input.value;
+            dots.forEach((dot, i) => dot.classList.toggle('active', i < val.length));
+            
+            if (val.length === 4) {
+                setTimeout(() => {
+                    if (val === correctPin) {
+                        callback();
+                    } else {
+                        showToast('❌ Невірний PIN');
+                        input.value = '';
+                        dots.forEach(dot => dot.classList.remove('active'));
+                    }
+                }, 150);
+            }
         });
     }
 
-    // ── TOAST ────────────────────────────────────────────────────────────
-    let toastTimer;
-    window.showToast = (msg, type = '') => {
-        const el = document.getElementById('toast');
-        el.textContent = msg;
-        el.className = 'show ' + type;
-        clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => { el.className = ''; }, 2800);
-    };
+    setupPinInput('auth', PIN_USER, () => {
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        render();
+    });
 
-    // ── AUTH ─────────────────────────────────────────────────────────────
-    window.checkAuth = () => {
-        const input = document.getElementById('auth-pin');
-        if (input.value === AUTH_PIN) {
-            document.getElementById('auth-screen').style.display = 'none';
-            document.getElementById('app-content').style.display = 'block';
-        } else {
-            input.classList.remove('shake');
-            void input.offsetWidth; // reflow для перезапуску анімації
-            input.classList.add('shake');
-            input.value = '';
-            input.focus();
-        }
-    };
+    setupPinInput('admin', PIN_ADMIN, () => {
+        isUnlocked = true;
+        document.getElementById('adminTools').style.display = 'block';
+        closeAdmin();
+        render();
+    });
 
-    // ── DATE & MODE ──────────────────────────────────────────────────────
-    // Визначаємо вихідні для наступного дня (замовлення на завтра)
-    window.getIsWeekend = () => [0, 5, 6].includes((new Date().getDay() + 1) % 7);
-
-    function renderDateMode() {
-        document.getElementById('date-label').textContent =
-            new Date().toLocaleDateString('uk-UA', { weekday: 'long', day: 'numeric', month: 'long' });
-        const isWe = window.getIsWeekend();
-        const badge = document.getElementById('mode-badge');
-        badge.className = 'mode-badge ' + (isWe ? 'weekend' : 'weekday');
-        badge.textContent = isWe ? 'ВИХІДНІ' : 'БУДНІ';
-    }
-
-    // ── FIREBASE ─────────────────────────────────────────────────────────
+    // --- FIREBASE ---
     window.addEventListener('firebase-ready', () => {
-        renderDateMode();
-        document.getElementById('fb-status').classList.add('online');
-
-        window.fOnValue(window.fRef(window.db, DB_KEY), snap => {
-            const val = snap.val() || {};
-            store.categories = val.categories || {};
-            store.items = val.items || {};
-            render();
-            updateSelect();
+        window.fOnValue(window.fRef(window.db, DB_PATH), snap => {
+            const data = snap.val() || {};
+            store.categories = data.categories || {};
+            store.items = data.items || {};
+            if (!document.activeElement || document.activeElement.tagName !== 'INPUT') {
+                render();
+                updateCatSelect();
+            }
         });
     });
 
-    // ── RENDER ───────────────────────────────────────────────────────────
+    // --- РЕНДЕР ---
     function render() {
         const container = document.getElementById('checklist-container');
-        const isWe = window.getIsWeekend();
-        const catIds = Object.keys(store.categories)
-            .sort((a, b) => store.categories[a].name.localeCompare(store.categories[b].name, 'uk'));
+        const isWe = [0, 5, 6].includes((new Date().getDay() + 1) % 7);
+        const catIds = Object.keys(store.categories).sort();
 
         if (catIds.length === 0) {
-            container.innerHTML = `<div class="empty-state"><div class="emoji">📦</div>Немає розділів. Додайте перший розділ вище.</div>`;
+            container.innerHTML = '<div style="text-align:center; padding:40px; opacity:0.3; font-size:12px;">Пусто. Натисніть "НОРМИ" щоб додати товари.</div>';
             return;
         }
 
-        container.innerHTML = catIds.map((catId, ci) => {
-            const items = Object.keys(store.items)
-                .filter(id => store.items[id].catId === catId)
-                .sort((a, b) => store.items[a].name.localeCompare(store.items[b].name, 'uk'));
-
-            const rows = items.map(itemId => {
-                const i = store.items[itemId];
+        container.innerHTML = catIds.map(cid => {
+            const items = Object.keys(store.items).filter(id => store.items[id].catId === cid);
+            const rows = items.map(iid => {
+                const i = store.items[iid];
                 const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
-                const norm  = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
+                const norm = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
                 const order = Math.max(0, norm - total);
-                const delBtn = isUnlocked
-                    ? `<span class="del-btn" onclick="deleteItem('${itemId}')" title="Видалити">✕</span>` : '';
 
                 return `<tr>
-                    <td><div class="item-name">${delBtn}${escHtml(i.name)}</div></td>
-                    <td><input type="number" min="0" step="0.1" value="${i.s_m || ''}"
-                         onchange="updDebounce('${itemId}','s_m',this.value)"
-                         class="inp-stock" placeholder="0"></td>
-                    <td><input type="number" min="0" step="0.1" value="${i.s_z || ''}"
-                         onchange="updDebounce('${itemId}','s_z',this.value)"
-                         class="inp-stock inp-stock-z" placeholder="0"></td>
-                    <td><input type="number" min="0" step="0.1" value="${i.wd || ''}"
-                         ${!isUnlocked ? 'readonly' : ''}
-                         onchange="updDebounce('${itemId}','wd',this.value)"
-                         class="inp-norm${isUnlocked ? '' : ' inp-readonly'}" placeholder="0"></td>
-                    <td><input type="number" min="0" step="0.1" value="${i.we || ''}"
-                         ${!isUnlocked ? 'readonly' : ''}
-                         onchange="updDebounce('${itemId}','we',this.value)"
-                         class="inp-norm${isUnlocked ? '' : ' inp-readonly'}" placeholder="0"></td>
-                    <td>${order > 0
-                        ? `<span class="need-badge">${order.toFixed(1)}</span>`
-                        : `<div class="done-mark">✓</div>`}
+                    <td>
+                        ${isUnlocked ? `<button class="del-btn" onclick="removeItem('${iid}')">✕</button>` : ''}${i.name}
                     </td>
+                    <td><input type="number" step="0.1" inputmode="decimal" value="${i.s_m || ''}" onfocus="this.select()" onchange="upd('${iid}','s_m',this.value)"></td>
+                    <td><input type="number" step="0.1" inputmode="decimal" value="${i.s_z || ''}" onfocus="this.select()" onchange="upd('${iid}','s_z',this.value)"></td>
+                    <td class="col-norm"><input type="number" step="0.1" inputmode="decimal" class="inp-norm" value="${i.wd || 0}" onchange="upd('${iid}','wd',this.value)"></td>
+                    <td class="col-norm"><input type="number" step="0.1" inputmode="decimal" class="inp-norm" value="${i.we || 0}" onchange="upd('${iid}','we',this.value)"></td>
+                    <td>${order > 0 ? `<span class="need-badge">${order.toFixed(1)}</span>` : `<div class="done-mark">✓</div>`}</td>
                 </tr>`;
             }).join('');
 
-            const emptyMsg = items.length === 0
-                ? `<tr><td colspan="6" style="padding:20px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--text-muted);">— порожній розділ —</td></tr>` : '';
-
-            const delCatBtn = isUnlocked
-                ? `<span class="cat-del-btn" onclick="deleteCat('${catId}')">Видалити розділ</span>` : '';
-
-            return `<div class="category-block" style="animation-delay:${ci * 0.05}s">
+            return `
+            <div class="category-block">
                 <div class="cat-header">
-                    <span class="cat-title">${escHtml(store.categories[catId].name)}</span>
-                    ${delCatBtn}
+                    <span class="cat-title">${store.categories[cid].name}</span>
+                    ${isUnlocked ? `<button class="hbtn" style="color:var(--red); border:none;" onclick="removeCategory('${cid}')">ВИДАЛИТИ ПАПКУ</button>` : ''}
                 </div>
-                <div class="table-wrap"><table>
-                    <thead><tr>
-                        <th>ТОВАР</th><th>МАНГАЛ</th><th>ЗАГОТ.</th><th>БД</th><th>ВХ</th><th>ТРЕБА</th>
-                    </tr></thead>
-                    <tbody>${rows}${emptyMsg}</tbody>
-                </table></div>
+                <div class="table-wrap">
+                    <table class="${isUnlocked ? 'admin-view' : 'hide-norms'}">
+                        <thead>
+                            <tr><th>ТОВАР</th><th>МАНГ</th><th>ЗАГОТ</th><th class="col-norm">БД</th><th class="col-norm">ВХ</th><th>ТРЕБА</th></tr>
+                        </thead>
+                        <tbody>${rows}</tbody>
+                    </table>
+                </div>
             </div>`;
         }).join('');
+        document.getElementById('lockBtn').innerHTML = isUnlocked ? "🔓 БЛОКУВАТИ" : "🔒 НОРМИ";
     }
 
-    // Escape HTML щоб уникнути XSS при введенні назв
-    function escHtml(str) {
-        return String(str)
-            .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-            .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    // ── UPDATE з дебаунсом ───────────────────────────────────────────────
-    window.updDebounce = (id, field, value) => {
-        const key = id + field;
-        clearTimeout(debounceMap[key]);
-        debounceMap[key] = setTimeout(() => {
-            const num = Math.max(0, parseFloat(value) || 0);
-            window.fSet(window.fRef(window.db, `${DB_KEY}/items/${id}/${field}`), num || '');
-        }, 600);
-    };
-
-    // ── ADD ITEM ─────────────────────────────────────────────────────────
+    // --- ДІЇ АДМІНА ---
     window.addItem = () => {
-        const nameEl = document.getElementById('inpName');
-        const catId  = document.getElementById('selCat').value;
-        const name   = nameEl.value.trim();
-        if (!name) { nameEl.focus(); return; }
-        if (!catId) { showToast('⚠️ Спочатку оберіть розділ', 'error'); return; }
-        window.fPush(window.fRef(window.db, `${DB_KEY}/items`),
-            { name, catId, s_m: '', s_z: '', wd: 0, we: 0 });
-        nameEl.value = '';
-        nameEl.focus();
-        showToast('✅ Товар додано', 'success');
+        const catId = document.getElementById('new-item-cat').value;
+        const name = document.getElementById('new-item-name').value;
+        if (!name || !catId) return showToast('❌ Вкажіть назву');
+        window.fPush(window.fRef(window.db, `${DB_PATH}/items`), { name, catId, s_m:0, s_z:0, wd:0, we:0 });
+        document.getElementById('new-item-name').value = '';
     };
 
-    // ── ADD CATEGORY ─────────────────────────────────────────────────────
+    window.removeItem = (id) => { if(confirm('Видалити товар?')) window.fRemove(window.fRef(window.db, `${DB_PATH}/items/${id}`)); };
+
     window.addCategory = () => {
-        const el = document.getElementById('inpCat');
-        const name = el.value.trim().toUpperCase();
-        if (!name) { el.focus(); return; }
-        window.fPush(window.fRef(window.db, `${DB_KEY}/categories`), { name });
-        el.value = '';
-        el.focus();
-        showToast('✅ Розділ додано', 'success');
+        const name = document.getElementById('new-cat-name').value;
+        if (!name) return;
+        window.fPush(window.fRef(window.db, `${DB_PATH}/categories`), { name });
+        document.getElementById('new-cat-name').value = '';
     };
 
-    // ── SELECT UPDATE ─────────────────────────────────────────────────────
-    function updateSelect() {
-        const sel = document.getElementById('selCat');
-        if (!sel) return;
-        const prev = sel.value;
-        sel.innerHTML = Object.keys(store.categories)
-            .sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name, 'uk'))
-            .map(id => `<option value="${id}">${escHtml(store.categories[id].name)}</option>`)
-            .join('');
-        if (prev && sel.querySelector(`option[value="${prev}"]`)) sel.value = prev;
+    window.removeCategory = (cid) => {
+        const hasItems = Object.values(store.items).some(i => i.catId === cid);
+        if (hasItems) return alert("Папка не порожня!");
+        if (confirm("Видалити папку?")) window.fRemove(window.fRef(window.db, `${DB_PATH}/categories/${cid}`));
+    };
+
+    window.updateCatSelect = () => {
+        const s = document.getElementById('new-item-cat');
+        if(s) s.innerHTML = Object.keys(store.categories).map(cid => `<option value="${cid}">${store.categories[cid].name}</option>`).join('');
+    };
+
+    // --- ЗАГАЛЬНІ ДІЇ ---
+    window.upd = (id, field, val) => {
+        const v = Math.max(0, parseFloat(val) || 0);
+        window.fSet(window.fRef(window.db, `${DB_PATH}/items/${id}/${field}`), v);
+    };
+
+    window.clearAll = () => {
+        if (confirm("Очистити всі залишки?")) {
+            Object.keys(store.items).forEach(id => {
+                window.fSet(window.fRef(window.db, `${DB_PATH}/items/${id}/s_m`), 0);
+                window.fSet(window.fRef(window.db, `${DB_PATH}/items/${id}/s_z`), 0);
+            });
+            showToast('🧹 Залишки обнулено');
+        }
+    };
+
+    window.toggleLock = () => {
+        if (isUnlocked) { isUnlocked = false; document.getElementById('adminTools').style.display = 'none'; render(); }
+        else { document.getElementById('adminModal').style.display = 'flex'; focusPinInput(); }
+    };
+
+    window.closeAdmin = () => {
+        document.getElementById('adminModal').style.display = 'none';
+        document.getElementById('hidden-admin-input').value = '';
+        document.querySelectorAll('#admin-dots .pin-dot').forEach(d => d.classList.remove('active'));
+    };
+
+    function showToast(m) {
+        const t = document.getElementById('toast');
+        t.textContent = m; t.className = 'show';
+        setTimeout(() => t.className = '', 2500);
     }
 
-    // ── LOCK / UNLOCK ─────────────────────────────────────────────────────
-    window.toggleLock = () => {
-        if (isUnlocked) {
-            isUnlocked = false;
-            render();
-            document.getElementById('lockBtn').innerHTML = "🔒 НОРМИ";
-            showToast('🔒 Заблоковано');
-        } else {
-            document.getElementById('passwordModal').style.display = 'flex';
-            setTimeout(() => document.getElementById('passInput').focus(), 50);
-        }
-    };
-
-    window.checkPass = () => {
-        if (document.getElementById('passInput').value === PIN) {
-            isUnlocked = true;
-            closePass();
-            render();
-            document.getElementById('lockBtn').innerHTML = "🔓 БЛОКУВАТИ";
-            showToast('🔓 Режим адміна увімкнено', 'success');
-        } else {
-            const el = document.getElementById('passInput');
-            el.style.borderColor = 'var(--red)';
-            setTimeout(() => el.style.borderColor = '', 1000);
-            el.value = '';
-            el.focus();
-            showToast('❌ Невірний пароль', 'error');
-        }
-    };
-
-    window.closePass = () => {
-        document.getElementById('passwordModal').style.display = 'none';
-        document.getElementById('passInput').value = '';
-    };
-    // Закрити модал по кліку на фон
-    document.getElementById('passwordModal').addEventListener('click', e => {
-        if (e.target === e.currentTarget) closePass();
-    });
-
-    // ── DELETE ────────────────────────────────────────────────────────────
-    window.deleteItem = (id) => {
-        if (confirm(`Видалити "${store.items[id]?.name}"?`)) {
-            window.fRemove(window.fRef(window.db, `${DB_KEY}/items/${id}`));
-            showToast('🗑️ Товар видалено');
-        }
-    };
-
-    window.deleteCat = (id) => {
-        const name = store.categories[id]?.name || 'розділ';
-        if (confirm(`Видалити розділ "${name}" та всі товари в ньому?`)) {
-            window.fRemove(window.fRef(window.db, `${DB_KEY}/categories/${id}`));
-            Object.keys(store.items).forEach(iid => {
-                if (store.items[iid].catId === id)
-                    window.fRemove(window.fRef(window.db, `${DB_KEY}/items/${iid}`));
-            });
-            showToast('🗑️ Розділ видалено');
-        }
-    };
-
-    // ── TELEGRAM ──────────────────────────────────────────────────────────
     window.shareToTelegram = async () => {
-        const isWe = window.getIsWeekend();
-        let message = `🔥 *ЗАМОВЛЕННЯ: МАНГАЛ ТА ЗАГОТІВЕЛЬНИЙ*\n`;
-        message += `📅 Дата: ${new Date().toLocaleDateString('uk-UA')}\n`;
-        message += `📊 Режим: *${isWe ? 'ВИХІДНІ' : 'БУДНІ'}*\n\n`;
+        const TG_TOKEN = "7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38";
+        const CHAT_ID = "-1002336484919";
+        const THREAD_ID = 15;
+        let message = `📝 *ЗАМОВЛЕННЯ (МАНГАЛ)*\n\n`;
         let hasOrder = false;
+        const isWe = [0, 5, 6].includes((new Date().getDay() + 1) % 7);
 
-        Object.keys(store.categories)
-            .sort((a,b) => store.categories[a].name.localeCompare(store.categories[b].name, 'uk'))
-            .forEach(cid => {
-                let catPart = `*${store.categories[cid].name}:*\n`;
-                let itemsFound = false;
-                Object.keys(store.items)
-                    .filter(id => store.items[id].catId === cid)
-                    .forEach(iid => {
-                        const i = store.items[iid];
-                        const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
-                        const norm  = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
-                        const order = Math.max(0, norm - total);
-                        if (order > 0) { catPart += `• ${i.name}: *${order.toFixed(1)}*\n`; itemsFound = true; hasOrder = true; }
-                    });
-                if (itemsFound) message += catPart + '\n';
-            });
+        Object.keys(store.items).forEach(id => {
+            const i = store.items[id];
+            const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
+            const norm = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
+            const order = Math.max(0, norm - total);
+            if (order > 0) { message += `• ${i.name}: *${order.toFixed(1)}*\n`; hasOrder = true; }
+        });
 
-        if (!hasOrder) { showToast('✅ Все в нормі — замовляти нічого', 'success'); return; }
-
+        if (!hasOrder) return showToast('✅ Замовляти нічого');
         try {
-            const res = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: TG_CHAT_ID, message_thread_id: TG_THREAD_ID, text: message, parse_mode: 'Markdown' })
+            await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: CHAT_ID, message_thread_id: THREAD_ID, text: message, parse_mode: 'Markdown' })
             });
-            if (res.ok) showToast('✅ Відправлено в Telegram', 'success');
-            else throw new Error();
-        } catch { showToast('❌ Помилка відправки', 'error'); }
+            showToast('✈️ Відправлено в Telegram');
+        } catch (e) { showToast('❌ Помилка мережі'); }
     };
 </script>
 </body>
