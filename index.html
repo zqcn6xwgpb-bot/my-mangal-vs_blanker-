@@ -348,30 +348,59 @@
     }
 
     window.shareToTelegram = async () => {
-        const TG_TOKEN = "7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38";
-        const CHAT_ID = "-1002336484919";
-        const THREAD_ID = 15;
-        let message = `📝 *ЗАМОВЛЕННЯ (МАНГАЛ)*\n\n`;
-        let hasOrder = false;
-        const isWe = [0, 5, 6].includes((new Date().getDay() + 1) % 7);
+    const TG_TOKEN = "7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38";
+    const CHAT_ID = "-1002336484919";
+    const THREAD_ID = 15;
+    
+    let message = `📝 *ЗАМОВЛЕННЯ (МАНГАЛ)*\n\n`;
+    let hasOrder = false;
+    const isWe = [0, 5, 6].includes((new Date().getDay() + 1) % 7);
 
-        Object.keys(store.items).forEach(id => {
-            const i = store.items[id];
-            const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
-            const norm = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
-            const order = Math.max(0, norm - total);
-            if (order > 0) { message += `• ${i.name}: *${order.toFixed(1)}*\n`; hasOrder = true; }
+    // Отримуємо список ID існуючих категорій
+    const activeCategories = Object.keys(store.categories);
+
+    Object.keys(store.items).forEach(id => {
+        const i = store.items[id];
+        
+        // ПЕРЕВІРКА: чи існує категорія цього товару в базі?
+        if (!activeCategories.includes(i.catId)) {
+            return; // Пропускаємо товар, якщо його папка видалена
+        }
+
+        const total = (parseFloat(i.s_m) || 0) + (parseFloat(i.s_z) || 0);
+        const norm = isWe ? (parseFloat(i.we) || 0) : (parseFloat(i.wd) || 0);
+        const order = Math.max(0, norm - total);
+
+        // Додаємо в список тільки якщо потрібно більше 0
+        if (order > 0.01) { 
+            message += `• ${i.name}: *${order.toFixed(1)}*\n`; 
+            hasOrder = true; 
+        }
+    });
+
+    if (!hasOrder) return showToast('✅ Замовляти нічого');
+
+    try {
+        const response = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                chat_id: CHAT_ID, 
+                message_thread_id: THREAD_ID, 
+                text: message, 
+                parse_mode: 'Markdown' 
+            })
         });
 
-        if (!hasOrder) return showToast('✅ Замовляти нічого');
-        try {
-            await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: CHAT_ID, message_thread_id: THREAD_ID, text: message, parse_mode: 'Markdown' })
-            });
+        if (response.ok) {
             showToast('✈️ Відправлено в Telegram');
-        } catch (e) { showToast('❌ Помилка мережі'); }
-    };
+        } else {
+            showToast('❌ Помилка Telegram API');
+        }
+    } catch (e) { 
+        showToast('❌ Помилка мережі'); 
+    }
+};
 </script>
 </body>
 </html>
