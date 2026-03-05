@@ -91,6 +91,77 @@
         .admin-view th, .admin-view td { width: 15% !important; }
         .admin-view th:nth-child(1), .admin-view td:nth-child(1) { width: 25% !important; }
         .btn-del { color: var(--red); font-weight: bold; cursor: pointer; margin-right: 10px; font-size: 14px; }
+
+        /* Telegram button animation */
+        #tgBtn { transition: all 0.2s ease; position: relative; overflow: hidden; }
+        #tgBtn.sending {
+            background: var(--accent) !important;
+            color: white !important;
+            border-color: var(--accent) !important;
+            transform: scale(0.95);
+        }
+        #tgBtn.sending::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+            animation: shimmer 0.8s infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        #tgBtn.sent {
+            background: var(--green) !important;
+            color: white !important;
+            border-color: var(--green) !important;
+        }
+        @keyframes btnPop {
+            0% { transform: scale(1); }
+            30% { transform: scale(0.9); }
+            60% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        #tgBtn:active { transform: scale(0.92); }
+
+        /* Success overlay */
+        #success-overlay {
+            position: fixed; inset: 0; z-index: 99999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(12px);
+            opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
+        }
+        #success-overlay.show { opacity: 1; pointer-events: all; }
+        .success-icon {
+            font-size: 72px; animation: iconPop 0.5s cubic-bezier(.36,2,.6,1) both;
+        }
+        @keyframes iconPop {
+            0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .success-title {
+            font-family: 'Syne', sans-serif; font-weight: 800;
+            font-size: 22px; color: #22c55e; margin-top: 18px; letter-spacing: 2px;
+            animation: fadeUp 0.4s 0.2s both;
+        }
+        .success-sub {
+            font-family: 'JetBrains Mono'; font-size: 11px;
+            color: var(--text-dim); margin-top: 8px;
+            animation: fadeUp 0.4s 0.35s both;
+        }
+        @keyframes fadeUp {
+            0% { transform: translateY(15px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        .success-ring {
+            width: 110px; height: 110px; border-radius: 50%;
+            border: 3px solid #22c55e; position: absolute;
+            animation: ringPulse 1s 0.3s ease-out both;
+        }
+        @keyframes ringPulse {
+            0% { transform: scale(0.7); opacity: 1; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
     </style>
 </head>
 <body>
@@ -109,11 +180,11 @@
 <div id="app-content" style="display:none;">
     <header>
         <div class="header-inner">
-            <div style="font-weight: 800; font-size: 14px;">🥩 БАРАНЧИК</div>
+            <div style="font-weight: 800; font-size: 14px;">🥩🔥</div>
             <div style="display:flex; gap:8px;">
                 <button class="hbtn" onclick="toggleTheme()" id="theme-icon">🌙</button>
                 <button class="hbtn" style="color:var(--red)" onclick="clearAll()">🧹</button>
-                <button class="hbtn" onclick="shareToTelegram()">✈️ ВІДПРАВИТИ</button>
+                <button class="hbtn" id="tgBtn" onclick="shareToTelegram()">✈️ ВІДПРАВИТИ</button>
                 <button class="hbtn" id="lockBtn" onclick="toggleLock()">🔒</button>
             </div>
         </div>
@@ -151,6 +222,14 @@
 </div>
 
 <div id="toast"></div>
+
+<!-- Success overlay -->
+<div id="success-overlay">
+    <div class="success-ring"></div>
+    <div class="success-icon">✈️</div>
+    <div class="success-title">ВІДПРАВЛЕНО!</div>
+    <div class="success-sub" id="success-time"></div>
+</div>
 
 <script>
     const PIN_USER = "2024", PIN_ADMIN = "3196", DB_PATH = 'mangal';
@@ -295,6 +374,7 @@
     };
 
     window.shareToTelegram = async () => {
+        const btn = document.getElementById('tgBtn');
         let msg = `📝 *ЗАМОВЛЕННЯ (МАНГАЛ)*\n\n`;
         const isWe = [0, 5, 6].includes(new Date().getDay());
         let has = false;
@@ -306,11 +386,40 @@
             if (order > 0.01) { msg += `• ${i.name}: *${order.toFixed(1)}*\n`; has = true; }
         });
         if(!has) return showToast('✅ Замовляти нічого');
-        await fetch(`https://api.telegram.org/bot7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38/sendMessage`, {
-            method: 'POST', headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ chat_id: "-1002336484919", message_thread_id: 15, text: msg, parse_mode: 'Markdown' })
-        });
-        showToast('✈️ ВІДПРАВЛЕНО');
+
+        // --- Анімація натискання ---
+        btn.classList.add('sending');
+        btn.textContent = '⏳ ВІДПРАВКА...';
+        btn.disabled = true;
+
+        try {
+            await fetch(`https://api.telegram.org/bot7906609865:AAGxiiMSSnJcShk5SoxE7eVItyqDcWvyE38/sendMessage`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ chat_id: "-1002336484919", message_thread_id: 15, text: msg, parse_mode: 'Markdown' })
+            });
+        } catch(e) {}
+
+        // --- Стан "відправлено" на кнопці ---
+        btn.classList.remove('sending');
+        btn.classList.add('sent');
+        btn.style.animation = 'btnPop 0.4s ease';
+        btn.textContent = '✅ ВІДПРАВЛЕНО';
+
+        // --- Показати оверлей підтвердження ---
+        const overlay = document.getElementById('success-overlay');
+        const now = new Date();
+        document.getElementById('success-time').textContent =
+            now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+        overlay.classList.add('show');
+        setTimeout(() => overlay.classList.remove('show'), 2500);
+
+        // --- Повернути кнопку до нормального стану ---
+        setTimeout(() => {
+            btn.classList.remove('sent');
+            btn.style.animation = '';
+            btn.textContent = '✈️ ВІДПРАВИТИ';
+            btn.disabled = false;
+        }, 3000);
     };
 </script>
 </body>
